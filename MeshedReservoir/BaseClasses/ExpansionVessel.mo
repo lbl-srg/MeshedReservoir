@@ -20,18 +20,28 @@ model ExpansionVessel "ExpansionVessel"
     "Start value of pressure"
     annotation(Dialog(tab = "Initialization"));
 
-  Modelica.Fluid.Interfaces.FluidPort_a portWat_a(
+  Modelica.Fluid.Interfaces.FluidPort_a portWat(
     redeclare package Medium = Medium) "Fluid port for water"
     annotation (Placement(transformation(extent={{-10,-110},{10,-90}})));
-  Modelica.Fluid.Interfaces.FluidPort_a portAir_a(
+  Modelica.Fluid.Interfaces.FluidPort_a portAir(
     redeclare package Medium = MediumAir) "Fluid port for air"
     annotation (Placement(transformation(extent={{-10,90},{10,110}})));
+  Modelica.Blocks.Interfaces.RealOutput m(unit="kg") "Total mass"
+    annotation (Placement(transformation(extent={{100,-100},{120,-80}}),
+        iconTransformation(extent={{100,-100},{120,-80}})));
+  Modelica.Blocks.Interfaces.RealOutput p(
+    unit="Pa",
+    displayUnit="Pa") "Air pressure in vessel"
+    annotation (Placement(transformation(extent={{100,40},{120,60}})));
   Modelica.Units.SI.Mass mWat "Mass of water in the vessel";
   Modelica.Units.SI.Mass mAir "Mass of air in the vessel";
   Modelica.Units.SI.Volume VWat "Volume of water in the vessel";
   Modelica.Units.SI.Volume VAir "Volume of air in the vessel";
 
 protected
+  constant Modelica.Units.SI.SpecificHeatCapacity RAir = 287.05
+    "Specific gas constant for air";
+
   parameter Modelica.Units.SI.MassFraction X_start[Medium.nX] = Medium.X_default
     "Start value of mass fractions m_i/m for water volume"
     annotation (Dialog(tab="Initialization", enable=Medium.nXi > 0));
@@ -65,9 +75,6 @@ protected
     "Approximate surface area of water";
   parameter Modelica.Units.SI.CoefficientOfHeatTransfer hCon = 5
     "Convective heat transfer coefficient";
-
-  constant Modelica.Units.SI.SpecificHeatCapacity RAir = 287.05
-    "Specific gas constant for air";
 
   Modelica.Units.SI.Energy HWat "Internal energy of water";
   Modelica.Units.SI.Mass[Medium.nXi] mXiWat
@@ -112,18 +119,22 @@ initial equation
 //     X=MediumAir.X_default));
   mXiAir = mAir*MediumAir.X_default[1:MediumAir.nXi];
   mCAir = fill(0, MediumAir.nC);
-  portAir_a.p = p_start;
+  portAir.p = p_start;
 equation
+  // Outputs
+  m = mWat + mAir;
+  p = portAir.p;
+
   assert(mWat > 0.01*VTot*rhoWat_start and mWat < 0.99*VTot*rhoWat_start,
     "Expansion vessel is undersized. You need to increase the value of the parameter VTot.");
 
   // Thermodynamic states
   stateWat = Medium.setState_phX(
-    p=portWat_a.p,
+    p=portWat.p,
     h=HWat/mWat,
     X=mXiWat/mWat);
   stateAir = MediumAir.setState_phX(
-    p=portAir_a.p,
+    p=portAir.p,
     h=HAir/mAir,
     X=mXiAir/mAir);
 
@@ -137,35 +148,35 @@ equation
   VAir = VTot - VWat;
 
   // Ideal gas law for air: p*V = m*R_s*T, where R_s = R/M (specific gas constant)
-  portAir_a.p * VAir = mAir * RAir * TAir;
+  portAir.p * VAir = mAir * RAir * TAir;
 
   // Heat transfer from water to air
   QWatToAir_flow = hCon * A * (TWat - TAir);
 
   // Conservation equations for water
-  der(mWat)   = portWat_a.m_flow;
-  der(HWat)   = portWat_a.m_flow * actualStream(portWat_a.h_outflow) - QWatToAir_flow;
-  der(mXiWat) = portWat_a.m_flow * actualStream(portWat_a.Xi_outflow);
-  der(mCWat)  = portWat_a.m_flow * actualStream(portWat_a.C_outflow);
+  der(mWat)   = portWat.m_flow;
+  der(HWat)   = portWat.m_flow * actualStream(portWat.h_outflow) - QWatToAir_flow;
+  der(mXiWat) = portWat.m_flow * actualStream(portWat.Xi_outflow);
+  der(mCWat)  = portWat.m_flow * actualStream(portWat.C_outflow);
   // Conservation equations for air
-  der(mAir)   = portAir_a.m_flow;
-  der(HAir)   = portAir_a.m_flow * actualStream(portAir_a.h_outflow) + QWatToAir_flow;
-  der(mXiAir) = portAir_a.m_flow * actualStream(portAir_a.Xi_outflow);
-  der(mCAir)  = portAir_a.m_flow * actualStream(portAir_a.C_outflow);
+  der(mAir)   = portAir.m_flow;
+  der(HAir)   = portAir.m_flow * actualStream(portAir.h_outflow) + QWatToAir_flow;
+  der(mXiAir) = portAir.m_flow * actualStream(portAir.Xi_outflow);
+  der(mCAir)  = portAir.m_flow * actualStream(portAir.C_outflow);
   // Properties of outgoing flow.
   // The water port pressure is set to the air port pressure.
-  portWat_a.p          = portAir_a.p;
-  mWat*portWat_a.h_outflow  = HWat;
-  mWat*portWat_a.Xi_outflow = mXiWat;
-  mWat*portWat_a.C_outflow  = mCWat;
-  mAir*portAir_a.h_outflow  = HAir;
-  mAir*portAir_a.Xi_outflow = mXiAir;
-  mAir*portAir_a.C_outflow  = mCAir;
+  portWat.p          = portAir.p;
+  mWat*portWat.h_outflow  = HWat;
+  mWat*portWat.Xi_outflow = mXiWat;
+  mWat*portWat.C_outflow  = mCWat;
+  mAir*portAir.h_outflow  = HAir;
+  mAir*portAir.Xi_outflow = mXiAir;
+  mAir*portAir.C_outflow  = mCAir;
 
    annotation (Icon(coordinateSystem(preserveAspectRatio=false,extent={{-100,
             -100},{100,100}}), graphics={
         Text(
-          extent={{-148,98},{152,138}},
+          extent={{20,94},{96,138}},
           textString="%name",
           textColor={0,0,255}),
         Rectangle(
@@ -196,7 +207,22 @@ equation
           lineColor={0,0,255},
           pattern=LinePattern.None,
           fillColor={0,140,72},
-          fillPattern=FillPattern.Solid)}),
+          fillPattern=FillPattern.Solid),
+        Line(points={{100,50},{50,50}}, color={0,0,0}),
+        Line(points={{100,-90},{50,-90}}, color={0,0,0}),
+        Line(points={{50,-90},{50,-80}}, color={0,0,0}),
+        Text(
+          extent={{62,82},{96,54}},
+          textColor={0,0,255},
+          textString="p"),
+        Text(
+          extent={{26,-34},{60,-62}},
+          textColor={0,0,255},
+          textString="p"),
+        Text(
+          extent={{60,-58},{94,-86}},
+          textColor={0,0,255},
+          textString="m")}),
 defaultComponentName="exp",
 Documentation(info="<html>
 <p>

@@ -1,0 +1,8 @@
+compareVars :=
+  {
+    "exp.portWat.m_flow",
+    "exp.m",
+    "exp.p",
+    "exp.VWat",
+    "exp.VAir"
+  };
