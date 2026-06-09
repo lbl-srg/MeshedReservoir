@@ -59,6 +59,16 @@ protected
   final parameter Modelica.Units.SI.Density rhoAir_start=MediumAir.density(state=
       stateAir_start) "Air density, used to compute start and guess values";
 
+  parameter Modelica.Units.SI.Height h = 1.5
+    "Approximate height of the vessel, used to compute an approximate surface area for heat transfer calculations";
+  parameter Modelica.Units.SI.Area A = VTot/h
+    "Approximate surface area of water";
+  parameter Modelica.Units.SI.CoefficientOfHeatTransfer hCon = 5
+    "Convective heat transfer coefficient";
+
+  constant Modelica.Units.SI.SpecificHeatCapacity RAir = 287.05
+    "Specific gas constant for air";
+
   Modelica.Units.SI.Energy HWat "Internal energy of water";
   Modelica.Units.SI.Mass[Medium.nXi] mXiWat
     "Masses of independent components in the water";
@@ -79,22 +89,27 @@ protected
   Modelica.Units.SI.Temperature TAir "Temperature of air";
   Medium.ThermodynamicState stateWat "Thermodynamic state of water";
   MediumAir.ThermodynamicState stateAir "Thermodynamic state of air";
+  Modelica.Units.SI.HeatFlowRate QWatToAir_flow "Heat flow rate from water to air";
 
 initial equation
-  mWat = VWat_start * rhoWat_start;
-  HWat = mWat*Medium.specificInternalEnergy(
-    Medium.setState_pTX(
-      p=p_start,
-      T=T_start,
-      X= X_start[1:Medium.nXi]));
+  // Water
+  //mWat = VWat_start * rhoWat_start;
+//  HWat = mWat*Medium.specificInternalEnergy(
+//    Medium.setState_pTX(
+//      p=p_start,
+//      T=T_start,
+  //      X= X_start[1:Medium.nXi]));
+  TWat = T_start;
+  TWat = TAir;
   mXiWat = mWat*X_start[1:Medium.nXi];
   mCWat = mWat*C_start[1:Medium.nC];
+  // Air
   mAir = (VTot - VWat_start) * rhoAir_start;
-  HAir = mAir*MediumAir.specificInternalEnergy(
-    MediumAir.setState_pTX(
-      p=p_start,
-      T=T_start,
-      X=MediumAir.X_default));
+//  HAir = mAir*MediumAir.specificInternalEnergy(
+//    MediumAir.setState_pTX(
+//      p=p_start,
+//      T=T_start,
+//     X=MediumAir.X_default));
   mXiAir = mAir*MediumAir.X_default[1:MediumAir.nXi];
   mCAir = fill(0, MediumAir.nC);
   portAir_a.p = p_start;
@@ -122,16 +137,19 @@ equation
   VAir = VTot - VWat;
 
   // Ideal gas law for air: p*V = m*R_s*T, where R_s = R/M (specific gas constant)
-  portAir_a.p * VAir = mAir * MediumAir.gasConstant(stateAir) * TAir;
+  portAir_a.p * VAir = mAir * RAir * TAir;
+
+  // Heat transfer from water to air
+  QWatToAir_flow = hCon * A * (TWat - TAir);
 
   // Conservation equations for water
   der(mWat)   = portWat_a.m_flow;
-  der(HWat)   = portWat_a.m_flow * actualStream(portWat_a.h_outflow);
+  der(HWat)   = portWat_a.m_flow * actualStream(portWat_a.h_outflow) - QWatToAir_flow;
   der(mXiWat) = portWat_a.m_flow * actualStream(portWat_a.Xi_outflow);
   der(mCWat)  = portWat_a.m_flow * actualStream(portWat_a.C_outflow);
   // Conservation equations for air
   der(mAir)   = portAir_a.m_flow;
-  der(HAir)   = portAir_a.m_flow * actualStream(portAir_a.h_outflow);
+  der(HAir)   = portAir_a.m_flow * actualStream(portAir_a.h_outflow) + QWatToAir_flow;
   der(mXiAir) = portAir_a.m_flow * actualStream(portAir_a.Xi_outflow);
   der(mCAir)  = portAir_a.m_flow * actualStream(portAir_a.C_outflow);
   // Properties of outgoing flow.
