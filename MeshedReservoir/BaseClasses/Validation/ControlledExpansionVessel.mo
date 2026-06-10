@@ -15,7 +15,7 @@ model ControlledExpansionVessel
     VTot=1,
     p_start=300000,
     mSetAll=2*0.5*1000)  "Expansion vessel"
-    annotation (Placement(transformation(extent={{20,28},{40,48}})));
+    annotation (Placement(transformation(extent={{20,12},{40,32}})));
 
   MeshedReservoir.BaseClasses.ControlledExpansionVessel exp2(
     redeclare package Medium = MediumWat,
@@ -24,7 +24,7 @@ model ControlledExpansionVessel
     VTot=1,
     p_start=300000,
     mSetAll=2*0.5*1000)  "Expansion vessel"
-    annotation (Placement(transformation(extent={{68,28},{88,48}})));
+    annotation (Placement(transformation(extent={{68,12},{88,32}})));
 
   Buildings.Fluid.Sources.MassFlowSource_T sou(
     redeclare package Medium = MediumWat,
@@ -32,7 +32,7 @@ model ControlledExpansionVessel
     m_flow=0.1,
     T=293.15,
     nPorts=1) "Mass flow source"
-    annotation (Placement(transformation(extent={{-40,8},{-20,28}})));
+    annotation (Placement(transformation(extent={{-40,-8},{-20,12}})));
 
   Buildings.Controls.OBC.CDL.Reals.Sources.TimeTable timTab(
     table=[
@@ -45,20 +45,20 @@ model ControlledExpansionVessel
     extrapolation=Buildings.Controls.OBC.CDL.Types.Extrapolation.HoldLastPoint,
     timeScale=3600)
     "Time schedule: 0 for t=0...60s, 1 for t=60...120s, then 0"
-    annotation (Placement(transformation(extent={{-80,16},{-60,36}})));
+    annotation (Placement(transformation(extent={{-80,0},{-60,20}})));
 
 equation
   connect(timTab.y[1], sou.m_flow_in)
-    annotation (Line(points={{-58,26},{-42,26}}, color={0,0,127}));
+    annotation (Line(points={{-58,10},{-42,10}}, color={0,0,127}));
   connect(sou.ports[1], exp1.portWat)
-    annotation (Line(points={{-20,18},{30,18},{30,28}}, color={0,127,255}));
+    annotation (Line(points={{-20,2},{30,2},{30,12}},   color={0,127,255}));
 
-  connect(exp1.m, exp2.mTotOth) annotation (Line(points={{41,29},{54,29},{54,38},
-          {66,38}}, color={0,0,127}));
-  connect(exp2.m, exp1.mTotOth) annotation (Line(points={{89,29},{96,29},{96,56},
-          {10,56},{10,38},{18,38}}, color={0,0,127}));
-  connect(exp2.portWat, exp1.portWat) annotation (Line(points={{78,28},{78,18},{
-          30,18},{30,28}}, color={0,127,255}));
+  connect(exp1.m, exp2.mTotOth) annotation (Line(points={{41,13},{54,13},{54,22},
+          {66,22}}, color={0,0,127}));
+  connect(exp2.m, exp1.mTotOth) annotation (Line(points={{89,13},{96,13},{96,40},
+          {10,40},{10,22},{18,22}}, color={0,0,127}));
+  connect(exp2.portWat, exp1.portWat) annotation (Line(points={{78,12},{78,2},{
+          30,2},{30,12}},  color={0,127,255}));
   annotation (
     Documentation(info="<html>
 <p>

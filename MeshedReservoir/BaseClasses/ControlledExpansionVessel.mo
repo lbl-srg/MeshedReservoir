@@ -72,6 +72,23 @@ model ControlledExpansionVessel "Controlled expansion vessel"
     redeclare final package Medium = Medium) "Fluid port for water"
     annotation (Placement(transformation(extent={{-10,-110},{10,-90}})));
 
+  Buildings.Controls.OBC.CDL.Reals.Sources.Constant mSetP(k=p_start)
+    if isMaster
+    "Set point for the pressure of this expansion vessel"
+    annotation (Placement(transformation(extent={{-140,100},{-120,120}})));
+  Buildings.Controls.OBC.CDL.Reals.Subtract errP(
+    u1(final unit="Pa"),
+    u2(final unit="Pa"),
+    y(final unit="Pa"))
+    if isMaster
+    "Control error for pressure of this expansion vessel"
+    annotation (Placement(transformation(extent={{-100,90},{-80,110}})));
+  Buildings.Controls.OBC.CDL.Reals.MultiplyByParameter errNorP(
+    final k=1/p_start)
+    if isMaster
+    "Normalized error for air control for pressure"
+    annotation (Placement(transformation(extent={{-40,90},{-20,110}})));
+
   Buildings.Controls.OBC.CDL.Reals.Add mAll
     "Total mass of all expansion vessels"
     annotation (Placement(transformation(extent={{-140,-18},{-120,2}})));
@@ -80,6 +97,7 @@ model ControlledExpansionVessel "Controlled expansion vessel"
     "Set point for all mass of the expansion vessels"
     annotation (Placement(transformation(extent={{-140,-50},{-120,-30}})));
   Buildings.Controls.OBC.CDL.Reals.Sources.Constant mSetExp(k=mTot_start)
+    if not isMaster
     "Set point for the mass of this expansion vessel"
     annotation (Placement(transformation(extent={{-140,20},{-120,40}})));
 
@@ -88,13 +106,17 @@ model ControlledExpansionVessel "Controlled expansion vessel"
     u2(final unit="kg"),
     y(final unit="kg")) "Control error for total mass in the system"
     annotation (Placement(transformation(extent={{-100,-40},{-80,-20}})));
-  Buildings.Controls.OBC.CDL.Reals.MultiplyByParameter errNorAir(final k=1/
-        mTot_start) "Normalized error for air control"
+  Buildings.Controls.OBC.CDL.Reals.MultiplyByParameter errNorAir(
+    final k=1/mTot_start)
+    if not isMaster
+    "Normalized error for air control"
     annotation (Placement(transformation(extent={{-40,40},{-20,60}})));
   Buildings.Controls.OBC.CDL.Reals.Subtract errM(
     u1(final unit="kg"),
     u2(final unit="kg"),
-    y(final unit="kg")) "Control error for mass of this expansion vessel"
+    y(final unit="kg"))
+    if not isMaster
+    "Control error for mass of this expansion vessel"
     annotation (Placement(transformation(extent={{-100,40},{-80,60}})));
   LevelController conAir "Controller for air mass flow rate"
     annotation (Placement(transformation(extent={{10,40},{30,60}})));
@@ -194,9 +216,18 @@ equation
           {-110,-36},{-102,-36}}, color={0,0,127}));
   connect(mAll.y, errMTot.u1) annotation (Line(points={{-118,-8},{-110,-8},{-110,
           -24},{-102,-24}}, color={0,0,127}));
-    annotation(Dialog(group = "Controller"),
-              Icon(coordinateSystem(preserveAspectRatio=false, extent={{-100,-100},
-            {100,100}}), graphics={
+  connect(mSetP.y, errP.u1) annotation (Line(points={{-118,110},{-110,110},{-110,
+          106},{-102,106}}, color={0,0,127}));
+  connect(errP.u2, exp.p) annotation (Line(points={{-102,94},{-112,94},{-112,80},
+          {160,80},{160,6},{151,6}}, color={0,0,127}));
+  connect(errP.y, errNorP.u)
+    annotation (Line(points={{-78,100},{-42,100}}, color={0,0,127}));
+  connect(errNorP.y, conAir.err) annotation (Line(points={{-18,100},{-10,100},{-10,
+          50},{8,50}}, color={0,0,127}));
+  annotation(
+    Icon(coordinateSystem(preserveAspectRatio=false, extent={{-100,-100},
+      {100,100}}),
+      graphics={
         Line(points={{-44,0},{-100,0}}, color={0,0,0}),
         Rectangle(
           extent={{-44,80},{60,-80}},
@@ -257,7 +288,7 @@ equation
           fillColor={28,108,200},
           fillPattern=FillPattern.Solid)}),
         Diagram(
-        coordinateSystem(preserveAspectRatio=false, extent={{-180,-100},{180,100}})));
+        coordinateSystem(preserveAspectRatio=false, extent={{-180,-100},{180,140}})));
 
 
 end ControlledExpansionVessel;
