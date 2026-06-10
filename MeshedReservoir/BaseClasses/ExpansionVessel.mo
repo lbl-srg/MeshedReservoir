@@ -20,23 +20,36 @@ model ExpansionVessel "ExpansionVessel"
     "Start value of pressure"
     annotation(Dialog(tab = "Initialization"));
 
+  final parameter Modelica.Units.SI.Mass mAir_start = (VTot - VWat_start) * rhoAir_start
+    "Initial mass of air";
+  final parameter Modelica.Units.SI.Mass mWat_start = VWat_start * rhoWat_start
+    "Initial mass of water";
+  final parameter Modelica.Units.SI.Mass mTot_start = mAir_start + mWat_start
+    "Initial mass of water and air";
+
   Modelica.Fluid.Interfaces.FluidPort_a portWat(
     redeclare package Medium = Medium) "Fluid port for water"
     annotation (Placement(transformation(extent={{-10,-110},{10,-90}})));
   Modelica.Fluid.Interfaces.FluidPort_a portAir(
     redeclare package Medium = MediumAir) "Fluid port for air"
     annotation (Placement(transformation(extent={{-10,90},{10,110}})));
-  Modelica.Blocks.Interfaces.RealOutput m(unit="kg") "Total mass"
-    annotation (Placement(transformation(extent={{100,-100},{120,-80}}),
+  Modelica.Blocks.Interfaces.RealOutput m(unit="kg") "Total mass of water and air"
+    annotation (Placement(transformation(extent={{100,-70},{120,-50}}),
         iconTransformation(extent={{100,-100},{120,-80}})));
   Modelica.Blocks.Interfaces.RealOutput p(
     unit="Pa",
-    displayUnit="Pa") "Air pressure in vessel"
-    annotation (Placement(transformation(extent={{100,40},{120,60}})));
-  Modelica.Units.SI.Mass mWat "Mass of water in the vessel";
-  Modelica.Units.SI.Mass mAir "Mass of air in the vessel";
+    displayUnit="Pa",
+    nominal=p_start,
+    stateSelect=StateSelect.prefer) "Air pressure in vessel"
+    annotation (Placement(transformation(extent={{100,50},{120,70}})));
+  Modelica.Units.SI.Mass mWat(
+    stateSelect=StateSelect.always,
+    nominal=mWat_start) "Mass of water in the vessel";
+  Modelica.Units.SI.Mass mAir(
+    stateSelect=StateSelect.avoid) "Mass of air in the vessel";
   Modelica.Units.SI.Volume VWat "Volume of water in the vessel";
   Modelica.Units.SI.Volume VAir "Volume of air in the vessel";
+  Real hNor = VWat / VTot "Normalized height of water level";
 
 protected
   constant Modelica.Units.SI.SpecificHeatCapacity RAir = 287.05
@@ -54,7 +67,7 @@ protected
     "Nominal value of trace substances for water volume. (Set to typical order of magnitude.)"
     annotation (Dialog(tab="Advanced", enable=Medium.nC > 0));
 
-  // Air volume parameters
+  // Volume parameters
   final parameter Medium.ThermodynamicState stateWat_start = Medium.setState_pTX(
       T=T_start,
       p=p_start,
@@ -100,23 +113,12 @@ protected
 
 initial equation
   // Water
-  //mWat = VWat_start * rhoWat_start;
-//  HWat = mWat*Medium.specificInternalEnergy(
-//    Medium.setState_pTX(
-//      p=p_start,
-//      T=T_start,
-  //      X= X_start[1:Medium.nXi]));
   TWat = T_start;
   TWat = TAir;
   mXiWat = mWat*X_start[1:Medium.nXi];
   mCWat = mWat*C_start[1:Medium.nC];
   // Air
-  mAir = (VTot - VWat_start) * rhoAir_start;
-//  HAir = mAir*MediumAir.specificInternalEnergy(
-//    MediumAir.setState_pTX(
-//      p=p_start,
-//      T=T_start,
-//     X=MediumAir.X_default));
+  mAir = mAir_start;
   mXiAir = mAir*MediumAir.X_default[1:MediumAir.nXi];
   mCAir = fill(0, MediumAir.nC);
   portAir.p = p_start;
@@ -125,8 +127,9 @@ equation
   m = mWat + mAir;
   p = portAir.p;
 
-  assert(mWat > 0.01*VTot*rhoWat_start and mWat < 0.99*VTot*rhoWat_start,
-    "Expansion vessel is undersized. You need to increase the value of the parameter VTot.");
+  assert(hNor > 0.01 and hNor < 0.99,
+    "In " + getInstanceName() + ": Expansion vessel is undersized. Normalized water level is hNor = " + String(hNor) + ".
+   You need to increase the value of the parameter VTot.");
 
   // Thermodynamic states
   stateWat = Medium.setState_phX(
@@ -185,18 +188,6 @@ equation
           fillColor={0,0,0},
           fillPattern=FillPattern.Solid),
         Rectangle(
-          extent={{-50,70},{50,-70}},
-          lineColor={0,0,0},
-          fillColor={255,255,255},
-          fillPattern=FillPattern.Solid),
-        Polygon(
-          points={{-50,22},{-50,26},{-50,32},{-28,16},{0,30},{26,16},{46,32},{
-              50,32},{50,28},{52,-70},{52,-70},{-50,-70},{-50,-70},{-50,22}},
-          lineColor={0,0,255},
-          smooth=Smooth.Bezier,
-          fillColor={0,0,255},
-          fillPattern=FillPattern.Solid),
-        Rectangle(
           extent={{2,-80},{-2,-90}},
           lineColor={0,0,255},
           pattern=LinePattern.None,
@@ -208,11 +199,11 @@ equation
           pattern=LinePattern.None,
           fillColor={0,140,72},
           fillPattern=FillPattern.Solid),
-        Line(points={{100,50},{50,50}}, color={0,0,0}),
+        Line(points={{100,60},{50,60}}, color={0,0,0}),
         Line(points={{100,-90},{50,-90}}, color={0,0,0}),
         Line(points={{50,-90},{50,-80}}, color={0,0,0}),
         Text(
-          extent={{62,82},{96,54}},
+          extent={{62,94},{96,66}},
           textColor={0,0,255},
           textString="p"),
         Text(
@@ -220,16 +211,70 @@ equation
           textColor={0,0,255},
           textString="p"),
         Text(
-          extent={{60,-58},{94,-86}},
+          extent={{64,-58},{98,-86}},
           textColor={0,0,255},
-          textString="m")}),
+          textString="m"),
+        Rectangle(
+          extent={{-50,70},{50,-70}},
+          lineColor={0,0,0},
+          fillColor={255,255,255},
+          fillPattern=FillPattern.Solid),
+        Rectangle(
+          extent={{-50,0},{50,-70}},
+          lineColor={0,0,0},
+          fillColor={28,108,200},
+          fillPattern=FillPattern.Solid,
+          pattern=LinePattern.None)}),
 defaultComponentName="exp",
 Documentation(info="<html>
 <p>
-This is a model of a pressure expansion vessel that allows adding or removing water.
+This is a model of a pressure expansion vessel that allows adding or removing water and air.
+The vessel contains two fluid zones: a liquid water zone and a gaseous air zone.
+</p>
+<h4>Main Physics</h4>
+<p>
+The model implements the following physics:
+</p>
+<ul>
+<li>
+<b>Volume partitioning:</b> The total vessel volume <code>VTot</code> is divided between
+water volume <code>VWat</code> and air volume <code>VAir</code>, where
+<code>VWat + VAir = VTot</code>. The water volume is computed from the water mass
+and density.
+</li>
+<li>
+<b>Pressure coupling:</b> The water and air pressures are equal (<code>portWat.p = portAir.p</code>),
+representing mechanical equilibrium at the water-air interface.
+</li>
+<li>
+<b>Ideal gas law:</b> The air volume follows the ideal gas law
+<code>p·VAir = mAir·RAir·TAir</code>, where <code>RAir = 287.05 J/(kg·K)</code>
+is the specific gas constant for air.
+</li>
+<li>
+<b>Mass conservation:</b> Separate mass balance equations for water and air, tracking
+mass flows through the respective ports and accounting for species transport.
+</li>
+<li>
+<b>Energy conservation:</b> Separate energy balance equations for water and air,
+including enthalpy flows and heat transfer between the two zones.
+</li>
+<li>
+<b>Heat transfer:</b> Convective heat transfer between water and air is modeled as
+<code>QWatToAir_flow = hCon·A·(TWat - TAir)</code>, where the surface area <code>A</code>
+and heat transfer coefficient <code>hCon</code> are approximated from the vessel geometry.
+</li>
+</ul>
+<p>
+The model includes an assertion to warn if the vessel becomes too full or too empty
+(outside the range of 1% to 99% water volume), indicating undersizing.
 </p>
 </html>", revisions="<html>
 <ul>
+<li>
+June 9, 2026 by Michael Wetter:<br/>
+Added documentation of main physics and modeling approach.
+</li>
 <li>
 June 8, 2026 by Michael Wetter:<br/>
 First implementation.
