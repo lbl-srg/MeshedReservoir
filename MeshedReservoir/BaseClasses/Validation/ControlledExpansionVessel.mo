@@ -62,25 +62,14 @@ equation
   annotation (
     Documentation(info="<html>
 <p>
-This model validates the <a href=\"modelica://MeshedReservoir.BaseClasses.ExpansionVessel\">
-MeshedReservoir.BaseClasses.ExpansionVessel</a> component by connecting it to a mass flow source.
+This model validates the <a href=\"modelica://MeshedReservoir.BaseClasses.ControlledExpansionVessel\">
+MeshedReservoir.BaseClasses.ControlledExpansionVessel</a>
 </p>
-<p>
-The model instantiates two media packages at the top level:
-</p>
-<ul>
-<li>
-<code>Medium1</code>: Buildings.Media.Specialized.Water.TemperatureDependentDensity for water
-</li>
-<li>
-<code>Medium2</code>: Modelica.Media.Air.SimpleAir for air
-</li>
-</ul>
 </html>"),
     experiment(
       StopTime=18000,
       Tolerance=1e-06,
       __Dymola_Algorithm="Cvode"),
-    __Dymola_Commands(file="modelica://MeshedReservoir/Resources/Scripts/Dymola/BaseClasses/Validation/ExpansionVessel.mos"
+    __Dymola_Commands(file="modelica://MeshedReservoir/Resources/Scripts/Dymola/BaseClasses/Validation/ControlledExpansionVessel.mos"
         "Simulate and plot"));
 end ControlledExpansionVessel;

@@ -29,7 +29,7 @@ model ControlledExpansionVessel "Controlled expansion vessel"
     final unit="kg")
     "Set point for the mass of all expansion vessels, set to approximately sum of all mTot_start";
 
-  parameter Modelica.Units.SI.Time tCha = 120
+  parameter Modelica.Units.SI.Time tCha = 600
     "Time it takes to fully charge the vessel with water or air (at atmospheric pressure)"
     annotation(Dialog(group = "Pump and compressor sizing"));
 
@@ -208,13 +208,12 @@ equation
           lineColor={0,0,0},
           fillColor={255,255,255},
           fillPattern=FillPattern.Solid),
-        Polygon(
-          points={{-32,22},{-32,26},{-32,32},{-32,16},{-2,30},{24,16},{36,26},{50,
-              24},{50,18},{50,-70},{50,-70},{-32,-70},{-32,-70},{-32,22}},
-          lineColor={0,0,255},
-          smooth=Smooth.Bezier,
-          fillColor={0,0,255},
-          fillPattern=FillPattern.Solid),
+        Rectangle(
+          extent={{-32,DynamicSelect(0, -70 + 140*exp.hNor)},{50,-70}},
+          lineColor={0,0,0},
+          fillColor={28,108,200},
+          fillPattern=FillPattern.Solid,
+          pattern=LinePattern.None),
         Rectangle(
           extent={{2,-80},{-2,-90}},
           lineColor={0,0,255},
@@ -225,10 +224,6 @@ equation
         Line(points={{50,-90},{50,-80}}, color={0,0,0}),
         Text(
           extent={{62,94},{96,66}},
-          textColor={0,0,255},
-          textString="p"),
-        Text(
-          extent={{26,-34},{60,-62}},
           textColor={0,0,255},
           textString="p"),
         Text(
@@ -246,9 +241,22 @@ equation
         Line(points={{-90,10},{-78,0}}, color={0,0,0}),
         Text(
           visible=isMaster,
-          extent={{-26,74},{42,32}},
+          extent={{-26,114},{42,72}},
           textColor={0,0,0},
-          textString="master")}),                                Diagram(
+          textString="master"),
+        Rectangle(
+          extent={{DynamicSelect(-76, -75 + 15*min(0, conAir.y)),10},{DynamicSelect(-60, -75 + 15*max(0, conAir.y)),20}},
+          lineColor={0,0,0},
+          pattern=LinePattern.None,
+          fillColor={0,140,72},
+          fillPattern=FillPattern.Solid),
+        Rectangle(
+          extent=DynamicSelect({{-76,-20},{-60,-10}}, if isMaster then {{-75 + 15*min(0, conWat.y),-20},{-75 + 15*max(0, conWat.y),-10}} else {{-75,-20},{-75,-10}}),
+          lineColor={0,0,0},
+          pattern=LinePattern.None,
+          fillColor={28,108,200},
+          fillPattern=FillPattern.Solid)}),
+        Diagram(
         coordinateSystem(preserveAspectRatio=false, extent={{-180,-100},{180,100}})));
 
 

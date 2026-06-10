@@ -1,0 +1,9 @@
+simulateModel("MeshedReservoir.BaseClasses.Validation.ControlledExpansionVessel", stopTime=18000, method="Cvode", tolerance=1e-06, resultFile="ControlledExpansionVessel");
+createPlot(id=1, position={13, 15, 593, 854}, y={"sou.m_flow_in", "exp1.exp.hNor"}, range={0.0, 5.0, -0.5, 1.0}, grid=true, subPlot=101, colors={{28,108,200}, {238,46,47}}, timeUnit="h", displayUnits={"kg/s", "1"});
+createPlot(id=1, position={13, 15, 593, 854}, y={"exp1.errNorAir.y", "exp1.conWat.y"}, range={0.0, 5.0, -2.0, 2.0}, grid=true, subPlot=102, colors={{28,108,200}, {238,46,47}}, timeUnit="h", displayUnits={"1", "1"});
+createPlot(id=1, position={13, 15, 593, 854}, y={"exp1.conAir.y", "exp1.errNorMTot.y"}, range={0.0, 5.0, -1.5, 0.5}, grid=true, subPlot=103, colors={{28,108,200}, {238,46,47}}, timeUnit="h", displayUnits={"1", "1"});
+createPlot(id=1, position={13, 15, 593, 854}, y={"exp1.p"}, range={0.0, 5.0, -30000000.0, 10000000.0}, grid=true, subPlot=104, colors={{28,108,200}}, timeUnit="h", displayUnits={"Pa"});
+createPlot(id=2, position={624, 15, 592, 847}, y={"sou.m_flow_in", "exp2.exp.hNor"}, range={0.0, 5.0, -0.5, 1.0}, grid=true, subPlot=101, colors={{28,108,200}, {238,46,47}}, timeUnit="h", displayUnits={"kg/s", "1"});
+createPlot(id=2, position={624, 15, 592, 847}, y={"exp2.errNorAir.y", "exp2.conAir.y"}, range={0.0, 5.0, -1.5, 0.5}, grid=true, subPlot=102, colors={{28,108,200}, {238,46,47}}, timeUnit="h", displayUnits={"1", "1"});
+createPlot(id=2, position={624, 15, 592, 847}, y={"exp2.errNorMTot.y"}, range={0.0, 5.0, -0.4, 0.4}, grid=true, subPlot=103, colors={{238,46,47}}, timeUnit="h", displayUnits={"1"});
+createPlot(id=2, position={624, 15, 592, 847}, y=fill("", 0), range={0.0, 5.0, -0.4, 0.4}, grid=true, subPlot=104, timeUnit="h");

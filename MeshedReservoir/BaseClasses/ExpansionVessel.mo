@@ -220,7 +220,7 @@ equation
           fillColor={255,255,255},
           fillPattern=FillPattern.Solid),
         Rectangle(
-          extent={{-50,0},{50,-70}},
+          extent={{-50,DynamicSelect(0, -70 + 140*hNor)},{50,-70}},
           lineColor={0,0,0},
           fillColor={28,108,200},
           fillPattern=FillPattern.Solid,
