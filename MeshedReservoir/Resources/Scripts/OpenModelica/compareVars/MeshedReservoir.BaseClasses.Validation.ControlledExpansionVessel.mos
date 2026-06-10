@@ -1,0 +1,15 @@
+compareVars :=
+  {
+    "sou.m_flow_in",
+    "exp1.exp.hNor",
+    "exp1.errNorP.y",
+    "exp1.conWat.y",
+    "exp1.conAir.y",
+    "exp1.errNorMTot.y",
+    "exp1.p",
+    "sou.m_flow_in",
+    "exp2.exp.hNor",
+    "exp2.errNorM.y",
+    "exp2.conAir.y",
+    "exp2.errNorMTot.y"
+  };

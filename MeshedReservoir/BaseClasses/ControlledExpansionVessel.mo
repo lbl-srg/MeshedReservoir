@@ -70,7 +70,8 @@ model ControlledExpansionVessel "Controlled expansion vessel"
     annotation (Placement(transformation(extent={{130,-10},{150,10}})));
   Modelica.Fluid.Interfaces.FluidPort_a portWat(
     redeclare final package Medium = Medium) "Fluid port for water"
-    annotation (Placement(transformation(extent={{-10,-110},{10,-90}})));
+    annotation (Placement(transformation(extent={{-10,-110},{10,-90}}),
+        iconTransformation(extent={{-10,-110},{10,-90}})));
 
   Buildings.Controls.OBC.CDL.Reals.Sources.Constant mSetP(k=p_start)
     if isMaster
@@ -106,10 +107,8 @@ model ControlledExpansionVessel "Controlled expansion vessel"
     u2(final unit="kg"),
     y(final unit="kg")) "Control error for total mass in the system"
     annotation (Placement(transformation(extent={{-100,-40},{-80,-20}})));
-  Buildings.Controls.OBC.CDL.Reals.MultiplyByParameter errNorAir(
-    final k=1/mTot_start)
-    if not isMaster
-    "Normalized error for air control"
+  Buildings.Controls.OBC.CDL.Reals.MultiplyByParameter errNorM(final k=1/
+        mTot_start) if not isMaster "Normalized error for air control"
     annotation (Placement(transformation(extent={{-40,40},{-20,60}})));
   Buildings.Controls.OBC.CDL.Reals.Subtract errM(
     u1(final unit="kg"),
@@ -192,13 +191,13 @@ equation
   connect(exp.m, mAll.u2) annotation (Line(points={{151,-9},{160,-9},{160,-60},{
           -160,-60},{-160,-14},{-142,-14}},
                                      color={0,0,127}));
-  connect(errNorAir.u, errM.y)
+  connect(errNorM.u, errM.y)
     annotation (Line(points={{-42,50},{-78,50}}, color={0,0,127}));
   connect(gaiMAir_flow.y, souAir.m_flow_in) annotation (Line(points={{72,50},{86,
           50},{86,48},{110,48}}, color={0,0,127}));
   connect(conAir.y, gaiMAir_flow.u)
     annotation (Line(points={{32,50},{48,50}}, color={0,0,127}));
-  connect(errNorAir.y, conAir.err)
+  connect(errNorM.y, conAir.err)
     annotation (Line(points={{-18,50},{8,50}}, color={0,0,127}));
   connect(conWat.y, gaiMWat_flow.u)
     annotation (Line(points={{32,-30},{48,-30}}, color={0,0,127}));
