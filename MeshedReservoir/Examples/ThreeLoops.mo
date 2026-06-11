@@ -7,7 +7,7 @@ model ThreeLoops "Three reservoir loops connected"
   parameter Modelica.Units.SI.MassFlowRate m_flow_nominal = 685
     "Design mass flow rate";
 
-  parameter Real pumSchRamp[:,:]=[
+  parameter Real pumSchRam[:,:]=[
     3600, 0;
     7200, m_flow_nominal]
     "Control schedule, pump off for one hour, then ramping up for 1 hour, then full speed";
@@ -24,7 +24,7 @@ model ThreeLoops "Three reservoir loops connected"
     0, m_flow_nominal]
     "Control schedule, pump off for one hour, then ramping up for 1 hour, then full speed";
 
-  parameter Real pumSch[:,:] = pumSchRamp
+  parameter Real pumSch[:,:] = pumSchRam
     "Control schedule for pump";
 
   SingleLoop loo1(

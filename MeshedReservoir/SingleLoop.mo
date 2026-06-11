@@ -146,6 +146,8 @@ model SingleLoop "Single loop with expansion vessel"
     "Time schedule for pump operation"
     annotation (Placement(transformation(extent={{-100,70},{-80,90}})));
 
+  Modelica.Blocks.Interfaces.RealOutput pExp "Air pressure in vessel"
+    annotation (Placement(transformation(extent={{180,-50},{200,-30}})));
 equation
   connect(jun11.port_2, jun12.port_1)
     annotation (Line(points={{-10,40},{10,40}}, color={0,127,255}));
@@ -177,16 +179,22 @@ equation
     annotation (Line(points={{-80,-50},{-80,-100}}, color={0,127,255}));
   connect(expDow.m, m) annotation (Line(points={{151,51},{170,51},{170,60},{190,
           60}}, color={0,0,127}));
-  connect(expUp.m, m) annotation (Line(points={{-109,51},{-106,51},{-106,100},{170,
-          100},{170,60},{190,60}}, color={0,0,127}));
+  connect(expUp.m, m) annotation (Line(points={{-109,51},{-102,51},{-102,102},{
+          170,102},{170,60},{190,60}},
+                                   color={0,0,127}));
   connect(expUp.mAll, mAll) annotation (Line(points={{-132,60},{-150,60},{-150,0},
           {-200,0}}, color={0,0,127}));
-  connect(mAll, expDow.mAll) annotation (Line(points={{-200,0},{-150,0},{-150,104},
-          {120,104},{120,60},{128,60}}, color={0,0,127}));
+  connect(mAll, expDow.mAll) annotation (Line(points={{-200,0},{-150,0},{-150,
+          96},{120,96},{120,60},{128,60}},
+                                        color={0,0,127}));
   connect(pumDow.port_b, res.port_a) annotation (Line(points={{120,40},{140,40},
           {140,-40},{100,-40}}, color={0,127,255}));
   connect(res.port_b, vol.ports[2])
     annotation (Line(points={{80,-40},{23,-40}}, color={0,127,255}));
+  connect(expDow.p, pExp) annotation (Line(points={{151,66},{160,66},{160,-40},
+          {190,-40}}, color={0,0,127}));
+  connect(pExp, expUp.p) annotation (Line(points={{190,-40},{160,-40},{160,108},
+          {-106,108},{-106,66},{-109,66}}, color={0,0,127}));
   annotation (Icon(coordinateSystem(preserveAspectRatio=false, extent={{-180,-100},
             {180,120}}), graphics={
         Rectangle(
