@@ -1,5 +1,5 @@
 within MeshedReservoir;
-model SingleLoop
+model SingleLoop "Single loop with expansion vessel"
   final package Medium = Buildings.Media.Specialized.Water.TemperatureDependentDensity
     "Medium model for water";
   final package MediumAir = Modelica.Media.Air.SimpleAir
@@ -40,8 +40,8 @@ model SingleLoop
     "Set to true to have a expansion vessel upstream of the loop connection";
 
   parameter Real yPumRamp[:,:]=[
-    3600,0;
-    7200,m_flow_nominal]
+    3600, 0;
+    7200, m_flow_nominal]
     "Control schedule, pump off for one hour, then ramping up for 1 hour, then full speed";
 
   parameter Boolean isMaster
@@ -52,22 +52,25 @@ model SingleLoop
   Buildings.Controls.OBC.CDL.Interfaces.RealInput mAll
     "Total mass of all expansion vessels in the system"
     annotation (Placement(transformation(extent={{-220,-20},{-180,20}})));
-  Modelica.Blocks.Interfaces.RealOutput m "Mass of expansion vessel"
+  Modelica.Blocks.Interfaces.RealOutput m
+    "Mass of expansion vessel"
     annotation (Placement(transformation(extent={{180,50},{200,70}})));
 
-
-
-  Modelica.Fluid.Interfaces.FluidPort_a port_1(redeclare package Medium =
-        Medium) "Fluid port"
+  Modelica.Fluid.Interfaces.FluidPort_a port_1(
+    redeclare package Medium = Medium)
+    "Fluid port"
     annotation (Placement(transformation(extent={{-30,110},{-10,130}})));
-  Modelica.Fluid.Interfaces.FluidPort_a port_2(redeclare package Medium =
-        Medium) "Fluid port"
+  Modelica.Fluid.Interfaces.FluidPort_a port_2(
+    redeclare package Medium = Medium)
+    "Fluid port"
     annotation (Placement(transformation(extent={{10,110},{30,130}})));
-  Modelica.Fluid.Interfaces.FluidPort_a port_3(redeclare package Medium =
-        Medium) "Fluid port"
+  Modelica.Fluid.Interfaces.FluidPort_a port_3(
+    redeclare package Medium = Medium)
+    "Fluid port"
     annotation (Placement(transformation(extent={{-50,-110},{-30,-90}})));
-  Modelica.Fluid.Interfaces.FluidPort_a port_4(redeclare package Medium =
-        Medium) "Fluid port"
+  Modelica.Fluid.Interfaces.FluidPort_a port_4(
+    redeclare package Medium = Medium)
+    "Fluid port"
     annotation (Placement(transformation(extent={{-90,-110},{-70,-90}})));
 
   model Junction = Buildings.Fluid.FixedResistances.Junction(
@@ -95,9 +98,13 @@ model SingleLoop
       redeclare final package Medium = Medium,
       final m_flow_nominal=m_flow_nominal,
       final dp_nominal=dp_nominal-4*1000) "Flow resistance of loop";
-  ConditionalPump pumUp(have_pump=have_pumpUpstream) "Upstream pump"
+  ConditionalPump pumUp(
+    have_pump=have_pumpUpstream)
+    "Upstream pump"
     annotation (Placement(transformation(extent={{-60,30},{-40,50}})));
-  ConditionalPump pumDow(have_pump=not have_pumpUpstream) "Downstream pump"
+  ConditionalPump pumDow(
+    have_pump=not have_pumpUpstream)
+    "Downstream pump"
     annotation (Placement(transformation(extent={{100,30},{120,50}})));
 
   ExpansionVessel expUp
@@ -110,21 +117,24 @@ model SingleLoop
     annotation (Placement(transformation(extent={{130,50},{150,70}})));
 
   Junction jun11
-   "Junction"
+    "Junction"
     annotation (Placement(transformation(extent={{-30,50},{-10,30}})));
   Junction jun12
     "Junction"
     annotation (Placement(transformation(extent={{10,50},{30,30}})));
   Junction jun13
-   "Junction"
+    "Junction"
     annotation (Placement(transformation(extent={{-30,-50},{-50,-30}})));
   Junction jun14
     "Junction"
     annotation (Placement(transformation(extent={{-70,-50},{-90,-30}})));
 
-  Volume vol(nPorts=2) "Fluid volume"
+  Volume vol(
+    nPorts=2)
+    "Fluid volume"
     annotation (Placement(transformation(extent={{12,-40},{32,-20}})));
-  PressureDrop res "Flow resistance"
+  PressureDrop res
+    "Flow resistance"
     annotation (Placement(transformation(extent={{100,-50},{80,-30}})));
 
   Buildings.Controls.OBC.CDL.Reals.Sources.TimeTable yPum(
