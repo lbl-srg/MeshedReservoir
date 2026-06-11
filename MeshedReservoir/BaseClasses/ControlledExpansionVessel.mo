@@ -104,8 +104,10 @@ model ControlledExpansionVessel "Controlled expansion vessel"
     u2(final unit="kg"),
     y(final unit="kg")) "Control error for total mass in the system"
     annotation (Placement(transformation(extent={{-100,-40},{-80,-20}})));
-  Buildings.Controls.OBC.CDL.Reals.MultiplyByParameter errNorM(final k=1/
-        mTot_start) if not isMaster "Normalized error for air control"
+  Buildings.Controls.OBC.CDL.Reals.MultiplyByParameter errNorM(
+    final k=1/mTot_start)
+    if not isMaster
+    "Normalized error for air control"
     annotation (Placement(transformation(extent={{-40,40},{-20,60}})));
   Buildings.Controls.OBC.CDL.Reals.Subtract errM(
     u1(final unit="kg"),
@@ -135,13 +137,16 @@ model ControlledExpansionVessel "Controlled expansion vessel"
         mAir_flow_nominal)
     "Gain for air mass flow rate"
     annotation (Placement(transformation(extent={{50,40},{70,60}})));
-  Buildings.Controls.OBC.CDL.Reals.MultiplyByParameter errNorMTot(final k=1/
-        mSetAll) "Normalized error for water control"
+  Buildings.Controls.OBC.CDL.Reals.MultiplyByParameter errNorMTot(
+    final k=1/mSetAll)
+    "Normalized error for water control"
     annotation (Placement(transformation(extent={{-40,-40},{-20,-20}})));
-  LevelController conWat if isMaster "Controller for water level"
+  LevelController conWat
+    if isMaster
+    "Controller for water level"
     annotation (Placement(transformation(extent={{10,-40},{30,-20}})));
-  Buildings.Controls.OBC.CDL.Reals.MultiplyByParameter gaiMWat_flow(k=-
-        mWat_flow_nominal)
+  Buildings.Controls.OBC.CDL.Reals.MultiplyByParameter gaiMWat_flow(
+    k=-mWat_flow_nominal)
     if isMaster
     "Gain for air mass flow rate"
     annotation (Placement(transformation(extent={{50,-40},{70,-20}})));
