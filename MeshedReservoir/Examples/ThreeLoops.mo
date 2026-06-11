@@ -12,12 +12,12 @@ model ThreeLoops "Three reservoir loops connected"
   SingleLoop loo2(
     isMaster=false,
     mSetAll=mTot_start)
-                  "Second loop"
+    "Second loop"
     annotation (Placement(transformation(extent={{-26,-20},{10,2}})));
   SingleLoop loo3(
     isMaster=false,
     mSetAll=mTot_start)
-                  "Third loop"
+    "Third loop"
     annotation (Placement(transformation(extent={{-20,20},{16,42}})));
 
   Buildings.Controls.OBC.CDL.Reals.MultiSum mTotOth(nin=3)
