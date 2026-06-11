@@ -124,8 +124,8 @@ model SingleLoop
 
   Volume vol(nPorts=2) "Fluid volume"
     annotation (Placement(transformation(extent={{12,-40},{32,-20}})));
-  PressureDrop res1 "Flow resistance"
-    annotation (Placement(transformation(extent={{80,-50},{100,-30}})));
+  PressureDrop res "Flow resistance"
+    annotation (Placement(transformation(extent={{100,-50},{80,-30}})));
 
   Buildings.Controls.OBC.CDL.Reals.Sources.TimeTable yPum(
     table=yPumRamp,
@@ -141,12 +141,8 @@ equation
     annotation (Line(points={{30,40},{100,40}}, color={0,127,255}));
   connect(pumUp.port_a, expUp.portWat) annotation (Line(points={{-60,40},{-120,40},
           {-120,50}}, color={0,127,255}));
-  connect(pumDow.port_b, res1.port_b) annotation (Line(points={{120,40},{140,40},
-          {140,-40},{100,-40}}, color={0,127,255}));
-  connect(res1.port_a, vol.ports[1])
-    annotation (Line(points={{80,-40},{21,-40}}, color={0,127,255}));
-  connect(vol.ports[2], jun13.port_1)
-    annotation (Line(points={{23,-40},{-30,-40}}, color={0,127,255}));
+  connect(vol.ports[1], jun13.port_1)
+    annotation (Line(points={{21,-40},{-30,-40}}, color={0,127,255}));
   connect(jun13.port_2, jun14.port_1)
     annotation (Line(points={{-50,-40},{-70,-40}}, color={0,127,255}));
   connect(jun14.port_2,pumUp. port_a) annotation (Line(points={{-90,-40},{-120,-40},
@@ -175,6 +171,10 @@ equation
           {-200,0}}, color={0,0,127}));
   connect(mAll, expDow.mAll) annotation (Line(points={{-200,0},{-150,0},{-150,104},
           {120,104},{120,60},{128,60}}, color={0,0,127}));
+  connect(pumDow.port_b, res.port_a) annotation (Line(points={{120,40},{140,40},
+          {140,-40},{100,-40}}, color={0,127,255}));
+  connect(res.port_b, vol.ports[2])
+    annotation (Line(points={{80,-40},{23,-40}}, color={0,127,255}));
   annotation (Icon(coordinateSystem(preserveAspectRatio=false, extent={{-180,-100},
             {180,120}}), graphics={
         Rectangle(
