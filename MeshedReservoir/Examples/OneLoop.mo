@@ -4,7 +4,31 @@ model OneLoop "Single reservoir loop"
   parameter Modelica.Units.SI.Mass mTot_start = 2065.16
     "Total mass of expansion vessel at start of simulation. Added manually due to conditionally removed components";
 
+  parameter Modelica.Units.SI.MassFlowRate m_flow_nominal = 685
+    "Design mass flow rate";
+
+  parameter Real pumSchRamp[:,:]=[
+    3600, 0;
+    7200, m_flow_nominal]
+    "Control schedule, pump off for one hour, then ramping up for 1 hour, then full speed";
+
+  parameter Real pumSchDip[:,:]=[
+    0, m_flow_nominal;
+    3600, m_flow_nominal;
+    3600+900, 0;
+    3600+1800, 0;
+    7200, m_flow_nominal]
+    "Control schedule, pump off for one hour, then ramping up for 1 hour, then full speed";
+
+  parameter Real pumSchOn[:,:]=[
+    0, m_flow_nominal]
+    "Control schedule, pump off for one hour, then ramping up for 1 hour, then full speed";
+
+  parameter Real pumSch[:,:] = pumSchRamp
+    "Control schedule for pump";
   SingleLoop loo1(
+    pumSch=pumSch,
+    m_flow_nominal=m_flow_nominal,
     isMaster=true,
     mSetAll=mTot_start)
     "Single loop"

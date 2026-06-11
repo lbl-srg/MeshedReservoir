@@ -1,6 +1,7 @@
 within MeshedReservoir;
 model SingleLoop "Single loop with expansion vessel"
-  final package Medium = Buildings.Media.Specialized.Water.TemperatureDependentDensity
+  final package Medium = Buildings.Media.Specialized.Water.TemperatureDependentDensity(
+    p_default=600000)
     "Medium model for water";
   final package MediumAir = Modelica.Media.Air.SimpleAir
     "Medium model for air";
@@ -39,7 +40,7 @@ model SingleLoop "Single loop with expansion vessel"
   parameter Boolean have_expansionVesselUpstream = true
     "Set to true to have a expansion vessel upstream of the loop connection";
 
-  parameter Real yPumRamp[:,:]=[
+  parameter Real pumSch[:,:]=[
     3600, 0;
     7200, m_flow_nominal]
     "Control schedule, pump off for one hour, then ramping up for 1 hour, then full speed";
@@ -138,7 +139,7 @@ model SingleLoop "Single loop with expansion vessel"
     annotation (Placement(transformation(extent={{100,-50},{80,-30}})));
 
   Buildings.Controls.OBC.CDL.Reals.Sources.TimeTable yPum(
-    table=yPumRamp,
+    table=pumSch,
     smoothness=Buildings.Controls.OBC.CDL.Types.Smoothness.LinearSegments,
     extrapolation=Buildings.Controls.OBC.CDL.Types.Extrapolation.HoldLastPoint)
     "Time schedule for pump operation"

@@ -4,17 +4,46 @@ model ThreeLoops "Three reservoir loops connected"
   parameter Modelica.Units.SI.Mass mTot_start = 3*2065.16
     "Total mass of all expansion vessels at start of simulation. Added manually due to conditionally removed components";
 
+  parameter Modelica.Units.SI.MassFlowRate m_flow_nominal = 685
+    "Design mass flow rate";
+
+  parameter Real pumSchRamp[:,:]=[
+    3600, 0;
+    7200, m_flow_nominal]
+    "Control schedule, pump off for one hour, then ramping up for 1 hour, then full speed";
+
+  parameter Real pumSchDip[:,:]=[
+    0, m_flow_nominal;
+    3600, m_flow_nominal;
+    3600+1200, 0;
+    3600+2400, 0;
+    7200, m_flow_nominal]
+    "Control schedule, pump off for one hour, then ramping up for 1 hour, then full speed";
+
+  parameter Real pumSchOn[:,:]=[
+    0, m_flow_nominal]
+    "Control schedule, pump off for one hour, then ramping up for 1 hour, then full speed";
+
+  parameter Real pumSch[:,:] = pumSchRamp
+    "Control schedule for pump";
+
   SingleLoop loo1(
+    m_flow_nominal=m_flow_nominal,
+    pumSch = pumSch,
     isMaster=true,
     mSetAll=mTot_start)
     "First loop"
     annotation (Placement(transformation(extent={{-32,-60},{4,-38}})));
   SingleLoop loo2(
+    m_flow_nominal=m_flow_nominal,
+    pumSch = pumSch,
     isMaster=false,
     mSetAll=mTot_start)
     "Second loop"
     annotation (Placement(transformation(extent={{-26,-20},{10,2}})));
   SingleLoop loo3(
+    m_flow_nominal=m_flow_nominal,
+    pumSch = pumSch,
     isMaster=false,
     mSetAll=mTot_start)
     "Third loop"
