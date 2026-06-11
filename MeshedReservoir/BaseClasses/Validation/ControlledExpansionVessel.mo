@@ -14,7 +14,8 @@ model ControlledExpansionVessel
     isMaster=true,
     VTot=1,
     p_start=300000,
-    mSetAll=2*0.5*1000)  "Expansion vessel"
+    mSetAll=2*0.5*1000,
+    pMax=600000)         "Expansion vessel"
     annotation (Placement(transformation(extent={{20,12},{40,32}})));
 
   MeshedReservoir.BaseClasses.ControlledExpansionVessel exp2(
@@ -23,7 +24,8 @@ model ControlledExpansionVessel
     isMaster=false,
     VTot=1,
     p_start=300000,
-    mSetAll=2*0.5*1000)  "Expansion vessel"
+    mSetAll=2*0.5*1000,
+    pMax=600000)         "Expansion vessel"
     annotation (Placement(transformation(extent={{68,12},{88,32}})));
 
   Buildings.Fluid.Sources.MassFlowSource_T sou(

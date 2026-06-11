@@ -20,6 +20,14 @@ model ExpansionVessel "ExpansionVessel"
     "Start value of pressure"
     annotation(Dialog(tab = "Initialization"));
 
+  parameter Modelica.Units.SI.AbsolutePressure pMax
+    "Maximum pressure, above which the simulation stops with an assertion"
+    annotation(Dialog(group = "Safety bounds"));
+
+  parameter Modelica.Units.SI.AbsolutePressure pMin = 120000
+    "Minimum pressure, below which the simulation stops with an assertion"
+    annotation(Dialog(group = "Safety bounds"));
+
   final parameter Modelica.Units.SI.Mass mAir_start = (VTot - VWat_start) * rhoAir_start
     "Initial mass of air";
   final parameter Modelica.Units.SI.Mass mWat_start = VWat_start * rhoWat_start
@@ -130,6 +138,11 @@ equation
   assert(hNor > 0.01 and hNor < 0.99,
     "In " + getInstanceName() + ": Expansion vessel is undersized. Normalized water level is hNor = " + String(hNor) + ".
    You need to increase the value of the parameter VTot.");
+  assert(p >= pMin,
+    "In " + getInstanceName() + ": Expansion vessel pressure is below minimum pressure.");
+  assert(p <= pMax,
+    "In " + getInstanceName() + ": Expansion vessel pressure is above maximum pressure.");
+
 
   // Thermodynamic states
   stateWat = Medium.setState_phX(

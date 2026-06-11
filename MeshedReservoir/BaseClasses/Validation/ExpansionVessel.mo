@@ -11,7 +11,8 @@ model ExpansionVessel "Validation model for ExpansionVessel"
     redeclare package Medium = MediumWat,
     redeclare package MediumAir= MediumAir,
     VTot=1,
-    p_start=300000) "Expansion vessel"
+    p_start=300000,
+    pMax=600000)    "Expansion vessel"
     annotation (Placement(transformation(extent={{20,-10},{40,10}})));
 
   Buildings.Fluid.Sources.MassFlowSource_T sou(

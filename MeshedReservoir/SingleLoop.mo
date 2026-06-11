@@ -94,7 +94,8 @@ model SingleLoop "Single loop with expansion vessel"
     redeclare package MediumAir = MediumAir,
     final isMaster=isMaster,
     final VTot=VTotExp,
-    final mSetAll=mSetAll) "Expansion vessel";
+    final mSetAll=mSetAll,
+    pMax=1600000) "Expansion vessel";
   model PressureDrop = Buildings.Fluid.FixedResistances.PressureDrop(
       redeclare final package Medium = Medium,
       final m_flow_nominal=m_flow_nominal,

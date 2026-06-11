@@ -46,6 +46,14 @@ model ControlledExpansionVessel "Controlled expansion vessel"
   final parameter Modelica.Units.SI.Mass mTot_start = exp.mTot_start
     "Initial mass of water and air";
 
+  parameter Modelica.Units.SI.AbsolutePressure pMax
+    "Maximum pressure, above which the simulation stops with an assertion"
+    annotation(Dialog(group = "Safety bounds"));
+
+  parameter Modelica.Units.SI.AbsolutePressure pMin = 120000
+    "Minimum pressure, below which the simulation stops with an assertion"
+    annotation(Dialog(group = "Safety bounds"));
+
   Buildings.Controls.OBC.CDL.Interfaces.RealInput mAll(final unit="kg")
     "Total mass of all expansion vessels in the system" annotation (Placement(
         transformation(extent={{-220,-20},{-180,20}}), iconTransformation(
@@ -65,7 +73,9 @@ model ControlledExpansionVessel "Controlled expansion vessel"
     final VTot=VTot,
     final VWat_start=VWat_start,
     final T_start=T_start,
-    final p_start=p_start)
+    final p_start=p_start,
+    final pMax=pMax,
+    final pMin=pMin)
     "Expansion vessel"
     annotation (Placement(transformation(extent={{130,-10},{150,10}})));
   Modelica.Fluid.Interfaces.FluidPort_a portWat(
