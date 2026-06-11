@@ -50,6 +50,11 @@ model SingleLoop "Single loop with expansion vessel"
   parameter Real mSetAll
     "Set point for the mass of all expansion vessels, set to approximately sum of all mTot_start";
 
+  parameter Boolean addHeat = false
+    "Set to true to add heat";
+  parameter Modelica.Units.SI.HeatFlowRate Q_flow = vol.V * rho10 * 4200 * (30-10) / (3*3600)
+    "Heat flow rate to heat up volume from 20 to 30 degC in 3 hours";
+
   Buildings.Controls.OBC.CDL.Interfaces.RealInput mAll
     "Total mass of all expansion vessels in the system"
     annotation (Placement(transformation(extent={{-220,-20},{-180,20}})));
@@ -148,6 +153,10 @@ model SingleLoop "Single loop with expansion vessel"
 
   Modelica.Blocks.Interfaces.RealOutput pExp "Air pressure in vessel"
     annotation (Placement(transformation(extent={{180,-50},{200,-30}})));
+  Modelica.Thermal.HeatTransfer.Sources.FixedHeatFlow heaSou(Q_flow=Q_flow)
+    if addHeat
+    "Heat source"
+    annotation (Placement(transformation(extent={{-40,-10},{-20,10}})));
 equation
   connect(jun11.port_2, jun12.port_1)
     annotation (Line(points={{-10,40},{10,40}}, color={0,127,255}));
@@ -195,6 +204,8 @@ equation
           {190,-40}}, color={0,0,127}));
   connect(pExp, expUp.p) annotation (Line(points={{190,-40},{160,-40},{160,108},
           {-106,108},{-106,66},{-109,66}}, color={0,0,127}));
+  connect(heaSou.port, vol.heatPort) annotation (Line(points={{-20,0},{6,0},{6,-30},
+          {12,-30}}, color={191,0,0}));
   annotation (Icon(coordinateSystem(preserveAspectRatio=false, extent={{-180,-100},
             {180,120}}), graphics={
         Rectangle(
