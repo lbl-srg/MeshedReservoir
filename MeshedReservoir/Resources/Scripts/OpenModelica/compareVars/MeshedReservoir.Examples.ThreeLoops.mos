@@ -1,0 +1,7 @@
+compareVars :=
+  {
+    "loo1.res.m_flow",
+    "loo1.expUp.exp.p",
+    "loo2.expUp.exp.p",
+    "loo3.expUp.exp.p"
+  };
