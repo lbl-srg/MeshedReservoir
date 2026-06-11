@@ -2,6 +2,8 @@ within MeshedReservoir;
 model SingleLoop
   final package Medium = Buildings.Media.Specialized.Water.TemperatureDependentDensity
     "Medium model for water";
+  final package MediumAir = Modelica.Media.Air.SimpleAir
+    "Medium model for air";
   parameter Modelica.Units.SI.MassFlowRate m_flow_nominal = 685
     "Design mass flow rate";
   parameter Modelica.Units.SI.PressureDifference dp_nominal = 479E3
@@ -42,6 +44,19 @@ model SingleLoop
     7200,m_flow_nominal]
     "Control schedule, pump off for one hour, then ramping up for 1 hour, then full speed";
 
+  parameter Boolean isMaster
+    "Set to true if this is the master expansion vessel. Must have exactly one master in each connected fluid system";
+  parameter Real mSetAll
+    "Set point for the mass of all expansion vessels, set to approximately sum of all mTot_start";
+
+  Buildings.Controls.OBC.CDL.Interfaces.RealInput mAll
+    "Total mass of all expansion vessels in the system"
+    annotation (Placement(transformation(extent={{-220,-20},{-180,20}})));
+  Modelica.Blocks.Interfaces.RealOutput m "Mass of expansion vessel"
+    annotation (Placement(transformation(extent={{180,50},{200,70}})));
+
+
+
   Modelica.Fluid.Interfaces.FluidPort_a port_1(redeclare package Medium =
         Medium) "Fluid port"
     annotation (Placement(transformation(extent={{-30,110},{-10,130}})));
@@ -70,10 +85,12 @@ model SingleLoop
     mSenFac=1,
     m_flow_nominal=m_flow_nominal,
     V=(VLoo+VBor)) "Mixing volume";
-  model ExpansionVessel = BaseClasses.ExpansionVessel(
-    redeclare final package Medium = Medium,
-    redeclare final package MediumAir = Modelica.Media.Air.SimpleAir,
-    final VTot=VTotExp) "Expansion vessel";
+  model ExpansionVessel = BaseClasses.ControlledExpansionVessel(
+    redeclare package Medium = Medium,
+    redeclare package MediumAir = MediumAir,
+    final isMaster=isMaster,
+    final VTot=VTotExp,
+    final mSetAll=mSetAll) "Expansion vessel";
   model PressureDrop = Buildings.Fluid.FixedResistances.PressureDrop(
       redeclare final package Medium = Medium,
       final m_flow_nominal=m_flow_nominal,
@@ -84,9 +101,11 @@ model SingleLoop
     annotation (Placement(transformation(extent={{100,30},{120,50}})));
 
   ExpansionVessel expUp
-    if have_expansionVesselUpstream "Expansion vessel upstream"
+    if have_expansionVesselUpstream
+    "Expansion vessel upstream"
     annotation (Placement(transformation(extent={{-130,50},{-110,70}})));
-  ExpansionVessel expDow if not have_expansionVesselUpstream
+  ExpansionVessel expDow
+    if not have_expansionVesselUpstream
     "Expansion vessel downstream"
     annotation (Placement(transformation(extent={{130,50},{150,70}})));
 
@@ -120,7 +139,7 @@ equation
     annotation (Line(points={{-10,40},{10,40}}, color={0,127,255}));
   connect(jun12.port_2, pumDow.port_a)
     annotation (Line(points={{30,40},{100,40}}, color={0,127,255}));
-  connect(pumUp.port_a,expUp. portWat) annotation (Line(points={{-60,40},{-120,40},
+  connect(pumUp.port_a, expUp.portWat) annotation (Line(points={{-60,40},{-120,40},
           {-120,50}}, color={0,127,255}));
   connect(pumDow.port_b, res1.port_b) annotation (Line(points={{120,40},{140,40},
           {140,-40},{100,-40}}, color={0,127,255}));
@@ -148,6 +167,14 @@ equation
     annotation (Line(points={{-40,-50},{-40,-100}}, color={0,127,255}));
   connect(jun14.port_3, port_4)
     annotation (Line(points={{-80,-50},{-80,-100}}, color={0,127,255}));
+  connect(expDow.m, m) annotation (Line(points={{151,51},{170,51},{170,60},{190,
+          60}}, color={0,0,127}));
+  connect(expUp.m, m) annotation (Line(points={{-109,51},{-106,51},{-106,100},{170,
+          100},{170,60},{190,60}}, color={0,0,127}));
+  connect(expUp.mAll, mAll) annotation (Line(points={{-132,60},{-150,60},{-150,0},
+          {-200,0}}, color={0,0,127}));
+  connect(mAll, expDow.mAll) annotation (Line(points={{-200,0},{-150,0},{-150,104},
+          {120,104},{120,60},{128,60}}, color={0,0,127}));
   annotation (Icon(coordinateSystem(preserveAspectRatio=false, extent={{-180,-100},
             {180,120}}), graphics={
         Rectangle(
@@ -187,9 +214,5 @@ equation
           points={{-80,-60},{-80,-100}},
           color={0,0,0},
           thickness=0.5)}),                                      Diagram(
-        coordinateSystem(preserveAspectRatio=false, extent={{-180,-100},{180,120}})),
-    experiment(
-      StopTime=10800,
-      Tolerance=1e-05,
-      __Dymola_Algorithm="Cvode"));
+        coordinateSystem(preserveAspectRatio=false, extent={{-180,-100},{180,120}})));
 end SingleLoop;

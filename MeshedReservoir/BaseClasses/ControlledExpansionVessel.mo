@@ -46,10 +46,10 @@ model ControlledExpansionVessel "Controlled expansion vessel"
   final parameter Modelica.Units.SI.Mass mTot_start = exp.mTot_start
     "Initial mass of water and air";
 
-  Buildings.Controls.OBC.CDL.Interfaces.RealInput mTotOth(final unit="kg")
-    "Total mass of all other expansion vessels in the system"
-    annotation (Placement(transformation(extent={{-220,-20},{-180,20}}),
-        iconTransformation(extent={{-140,-20},{-100,20}})));
+  Buildings.Controls.OBC.CDL.Interfaces.RealInput mAll(final unit="kg")
+    "Total mass of all expansion vessels in the system" annotation (Placement(
+        transformation(extent={{-220,-20},{-180,20}}), iconTransformation(
+          extent={{-140,-20},{-100,20}})));
   Modelica.Blocks.Interfaces.RealOutput p(unit="Pa", displayUnit="Pa")
                       "Air pressure in vessel"
     annotation (Placement(transformation(extent={{180,50},{200,70}}),
@@ -90,9 +90,6 @@ model ControlledExpansionVessel "Controlled expansion vessel"
     "Normalized error for air control for pressure"
     annotation (Placement(transformation(extent={{-40,90},{-20,110}})));
 
-  Buildings.Controls.OBC.CDL.Reals.Add mAll
-    "Total mass of all expansion vessels"
-    annotation (Placement(transformation(extent={{-140,-18},{-120,2}})));
   Buildings.Controls.OBC.CDL.Reals.Sources.Constant mAllSetCon(
     k=mSetAll)
     "Set point for all mass of the expansion vessels"
@@ -184,13 +181,9 @@ equation
                                                       color={0,127,255}));
   connect(exp.p, p) annotation (Line(points={{151,6},{160,6},{160,60},{190,60}},
         color={0,0,127}));
-  connect(exp.m, m) annotation (Line(points={{151,-9},{160,-9},{160,-60},{190,-60}},
+  connect(exp.m, m) annotation (Line(points={{151,-9},{168,-9},{168,-60},{190,
+          -60}},
         color={0,0,127}));
-  connect(mTotOth, mAll.u1) annotation (Line(points={{-200,0},{-172,0},{-172,-2},
-          {-142,-2}}, color={0,0,127}));
-  connect(exp.m, mAll.u2) annotation (Line(points={{151,-9},{160,-9},{160,-60},{
-          -160,-60},{-160,-14},{-142,-14}},
-                                     color={0,0,127}));
   connect(errNorM.u, errM.y)
     annotation (Line(points={{-42,50},{-78,50}}, color={0,0,127}));
   connect(gaiMAir_flow.y, souAir.m_flow_in) annotation (Line(points={{72,50},{86,
@@ -207,14 +200,12 @@ equation
           -30},{90,-42},{110,-42}}, color={0,0,127}));
   connect(errMTot.y, errNorMTot.u)
     annotation (Line(points={{-78,-30},{-42,-30}}, color={0,0,127}));
-  connect(exp.m, errM.u1) annotation (Line(points={{151,-9},{160,-9},{160,-60},{
-          -160,-60},{-160,56},{-102,56}}, color={0,0,127}));
+  connect(exp.m, errM.u1) annotation (Line(points={{151,-9},{168,-9},{168,132},
+          {-152,132},{-152,56},{-102,56}},color={0,0,127}));
   connect(mSetExp.y, errM.u2) annotation (Line(points={{-118,30},{-110,30},{-110,
           44},{-102,44}}, color={0,0,127}));
   connect(mAllSetCon.y, errMTot.u2) annotation (Line(points={{-118,-40},{-110,-40},
           {-110,-36},{-102,-36}}, color={0,0,127}));
-  connect(mAll.y, errMTot.u1) annotation (Line(points={{-118,-8},{-110,-8},{-110,
-          -24},{-102,-24}}, color={0,0,127}));
   connect(mSetP.y, errP.u1) annotation (Line(points={{-118,110},{-110,110},{-110,
           106},{-102,106}}, color={0,0,127}));
   connect(errP.u2, exp.p) annotation (Line(points={{-102,94},{-112,94},{-112,80},
@@ -223,6 +214,8 @@ equation
     annotation (Line(points={{-78,100},{-42,100}}, color={0,0,127}));
   connect(errNorP.y, conAir.err) annotation (Line(points={{-18,100},{-10,100},{-10,
           50},{8,50}}, color={0,0,127}));
+  connect(errMTot.u1, mAll) annotation (Line(points={{-102,-24},{-130,-24},{
+          -130,0},{-200,0}}, color={0,0,127}));
   annotation(
     Icon(coordinateSystem(preserveAspectRatio=false, extent={{-100,-100},
       {100,100}}),

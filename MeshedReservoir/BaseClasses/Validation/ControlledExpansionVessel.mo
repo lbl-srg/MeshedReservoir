@@ -53,10 +53,10 @@ equation
   connect(sou.ports[1], exp1.portWat)
     annotation (Line(points={{-20,2},{30,2},{30,12}},   color={0,127,255}));
 
-  connect(exp1.m, exp2.mTotOth) annotation (Line(points={{41,13},{54,13},{54,22},
-          {66,22}}, color={0,0,127}));
-  connect(exp2.m, exp1.mTotOth) annotation (Line(points={{89,13},{96,13},{96,40},
-          {10,40},{10,22},{18,22}}, color={0,0,127}));
+  connect(exp1.m, exp2.mAll) annotation (Line(points={{41,13},{54,13},{54,22},{
+          66,22}}, color={0,0,127}));
+  connect(exp2.m, exp1.mAll) annotation (Line(points={{89,13},{96,13},{96,40},{
+          10,40},{10,22},{18,22}}, color={0,0,127}));
   connect(exp2.portWat, exp1.portWat) annotation (Line(points={{78,12},{78,2},{
           30,2},{30,12}},  color={0,127,255}));
   annotation (
