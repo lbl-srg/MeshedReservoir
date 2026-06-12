@@ -1,5 +1,5 @@
 compareVars :=
   {
-    "loo1.res.m_flow",
+    "loo1.res1.m_flow",
     "loo1.expUp.exp.p"
   };
