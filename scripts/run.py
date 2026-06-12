@@ -19,13 +19,12 @@ SIM_DIR = OUT_DIR / "simulations"
 YAML_FILE = SCRIPT_DIR / "simulation_cases.yaml"
 
 
-def mat_name(case_index, pumSch, params):
+def mat_name(case_index, params):
     """
     Generate the .mat filename based on parameter settings.
 
     Args:
         case_index: Index of the case
-        pumSch: Pump schedule (pumSchRam, pumSchDip, or pumSchOn)
         params: Dictionary with conInd and loop parameters
 
     Returns:
@@ -33,9 +32,6 @@ def mat_name(case_index, pumSch, params):
     """
     # Extract configuration index (1: highPressure, 2: idealPressure, 3: lowPressure)
     conInd = params['conInd']
-
-    # Create descriptive filename
-    pump_type = pumSch.replace('pumSch', '').lower()
 
     # Map conInd to filename prefix
     if conInd == 1:
@@ -45,7 +41,7 @@ def mat_name(case_index, pumSch, params):
     else:  # conInd == 3
         config = "low"
 
-    filename = f"ThreeLoops_{config}_{pump_type}_case{case_index}.mat"
+    filename = f"ThreeLoops_{config}_case{case_index}.mat"
     return filename
 
 
@@ -100,7 +96,7 @@ def simulate_case(args):
     model_name = settings['model_name']
 
     # Get the case name (mat filename without extension)
-    case_name = mat_name(case_index, case_data['pumSch'], case_data['parameters']).replace('.mat', '')
+    case_name = mat_name(case_index, case_data['parameters']).replace('.mat', '')
 
     # Create case-specific directory
     case_dir = base_sim_dir / case_name
@@ -119,16 +115,6 @@ def simulate_case(args):
         s.setSolver(settings['solver'])
         s.setTolerance(settings['tolerance'])
         s.setResultFile(f"{case_name}")
-
-        # Set pumSch parameter as Modelica identifier (not quoted string)
-        pumSch_value = case_data['pumSch']
-        if pumSch_value == "pumSchRam":
-            pumSchInd = 1
-        elif pumSch_value == "pumSchDip":
-            pumSchInd = 2
-        else:
-            pumSchInd = 3
-        s.addParameters({'pumSchInd': pumSchInd})
 
         # Set configuration index (1: highPressure, 2: idealPressure, 3: lowPressure)
         conInd = case_data['parameters']['conInd']
@@ -268,7 +254,7 @@ def postprocess():
     results = []
     for i, case_data in enumerate(cases):
         # Get the case name (mat filename without extension)
-        case_name = mat_name(i, case_data['pumSch'], case_data['parameters']).replace('.mat', '')
+        case_name = mat_name(i, case_data['parameters']).replace('.mat', '')
 
         # Mat file is in case-specific directory
         mat_file = SIM_DIR / case_name / f"{case_name}.mat"

@@ -5,9 +5,6 @@ model ThreeLoops "Three reservoir loops connected"
   parameter Integer conInd = 1
     "Index for configuration (1: highPressure, 2: idealPressure, 3: lowPressure)";
 
-  parameter Integer pumSchInd = 1
-    "Index for pump schedule, 1: ramp, 2: dip, 3: on";
-
   parameter Modelica.Units.SI.AbsolutePressure pMax=18E5
     "Maximum pressure, above which the simulation stops with an assertion"
     annotation(Dialog(group="Static pressures"));
@@ -30,32 +27,6 @@ model ThreeLoops "Three reservoir loops connected"
   parameter Modelica.Units.SI.MassFlowRate m_flow_nominal = 685
     "Design mass flow rate";
 
-  parameter Real pumSchRam[:,:]=[
-    3600, 0;
-    7200, m_flow_nominal]
-    "Control schedule, pump off for one hour, then ramping up for 1 hour, then full speed";
-
-  parameter Real pumSchDip[:,:]=[
-    0, 0;
-    1800, 0;
-    3600, m_flow_nominal;
-    7200, m_flow_nominal;
-    7200+1800, 0;
-    7200+3600, 0]
-    "Control schedule, pump off for one hour, then ramping up for 1 hour, then full speed";
-
-  parameter Real pumSchOn[:,:]=[
-    0, m_flow_nominal]
-    "Control schedule, pump off for one hour, then ramping up for 1 hour, then full speed";
-
-  parameter Real pumSch[:,:] =
-    if pumSchInd == 1 then
-      pumSchRam
-    elseif pumSchInd == 2 then
-      pumSchDip
-    else
-      pumSchOn
-    "Control schedule for pump";
 
   parameter MeshedReservoir.Configuration configuration =
     if conInd == 1 then
@@ -66,12 +37,34 @@ model ThreeLoops "Three reservoir loops connected"
       MeshedReservoir.Configuration.lowPressure
     "Configuration of all loops";
 
+  parameter Real pumSch_2[:,:]=[
+    0.0*3600, 0;
+    0.5*3600, 0;
+    1.0*3600, m_flow_nominal;
+    2.0*3600, m_flow_nominal;
+    2.5*3600, 0;
+    3.0*3600, 0;
+    4.0*3600, m_flow_nominal;
+    5.0*3600, m_flow_nominal;
+    5.5*3600, 0;
+    6.0*3600, 0]
+    "Control schedule";
+
+  parameter Real pumSch_13[:,:]=[
+    0.0*3600, 0;
+    0.5*3600, 0;
+    1.0*3600, m_flow_nominal;
+    5.0*3600, m_flow_nominal;
+    5.5*3600, 0;
+    6.0*3600, 0]
+    "Control schedule";
+
   SingleLoop loo1(
     final pMax=pMax,
     final pMin=pMin,
     final p_start=p_start,
     m_flow_nominal=m_flow_nominal,
-    pumSch=pumSch,
+    pumSch=pumSch_13,
     isMaster=true,
     mSetAll=mTot_start,
     configuration=configuration)
@@ -83,7 +76,7 @@ model ThreeLoops "Three reservoir loops connected"
     final pMin=pMin,
     final p_start=p_start,
     m_flow_nominal=m_flow_nominal,
-    pumSch=pumSch,
+    pumSch=pumSch_2,
     isMaster=false,
     mSetAll=mTot_start,
     configuration=configuration)
@@ -95,7 +88,7 @@ model ThreeLoops "Three reservoir loops connected"
     final pMin=pMin,
     final p_start=p_start,
     m_flow_nominal=m_flow_nominal,
-    pumSch=pumSch,
+    pumSch=pumSch_13,
     isMaster=false,
     mSetAll=mTot_start,
     configuration=configuration)
@@ -131,9 +124,9 @@ equation
           -80},{-50,-80},{-50,-50},{-28,-50}},
                                           color={0,0,127}));
   annotation (experiment(
-      StopTime=10800,
-      Tolerance=1e-05,
-      __Dymola_Algorithm="Radau"),
+      StopTime=21600,
+      Tolerance=1e-06,
+      __Dymola_Algorithm="Cvode"),
     __Dymola_Commands(file="modelica://MeshedReservoir/Resources/Scripts/Dymola/Examples/ThreeLoops.mos"
         "Simulate and plot"),
     Icon(coordinateSystem(preserveAspectRatio=false)),

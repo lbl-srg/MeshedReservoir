@@ -6,9 +6,8 @@ simulation_settings:
   tolerance: 1.0e-6
 
 cases:
-  # Case 1: pumSchRam with high settings
-  - pumSch: pumSchRam
-    label: "high ramp"
+  # Case 1: high pressure
+  - label: "high pressure"
     parameters:
       conInd: 1  # highPressure
       loo1:
@@ -18,9 +17,8 @@ cases:
       loo3:
         addHeat: false
 
-  # Case 2: pumSchRam with ideal settings
-  - pumSch: pumSchRam
-    label: "ideal ramp"
+  # Case 2: ideal pressure
+  - label: "ideal pressure"
     parameters:
       conInd: 2  # idealPressure
       loo1:
@@ -30,9 +28,8 @@ cases:
       loo3:
         addHeat: false
 
-  # Case 3: pumSchRam with low settings
-  - pumSch: pumSchRam
-    label: "low ramp"
+  # Case 3: low pressure
+  - label: "low pressure"
     parameters:
       conInd: 3  # lowPressure
       loo1:
@@ -42,45 +39,8 @@ cases:
       loo3:
         addHeat: false
 
-  # Case 4: pumSchDip with high settings
-  - pumSch: pumSchDip
-    label: "high trapezoid"
-    parameters:
-      conInd: 1  # highPressure
-      loo1:
-        addHeat: false
-      loo2:
-        addHeat: false
-      loo3:
-        addHeat: false
-
-  # Case 5: pumSchDip with ideal settings
-  - pumSch: pumSchDip
-    label: "ideal trapezoid"
-    parameters:
-      conInd: 2  # idealPressure
-      loo1:
-        addHeat: false
-      loo2:
-        addHeat: false
-      loo3:
-        addHeat: false
-
-  # Case 6: pumSchDip with low settings
-  - pumSch: pumSchDip
-    label: "low trapezoid"
-    parameters:
-      conInd: 3  # lowPressure
-      loo1:
-        addHeat: false
-      loo2:
-        addHeat: false
-      loo3:
-        addHeat: false
-
-  # Case 7: pumSchOn with ideal settings
-  - pumSch: pumSchOn
-    label: "ideal, on, with heat"
+  # Case 4: ideal, on, with heat settings
+  - label: "ideal, on, with heat"
     parameters:
       conInd: 2  # idealPressure
       loo1:
