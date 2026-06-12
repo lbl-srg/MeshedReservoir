@@ -27,6 +27,7 @@ model OneLoop "Single reservoir loop"
   parameter Real pumSch[:,:] = pumSchRamp
     "Control schedule for pump";
   SingleLoop loo1(
+    configuration=MeshedReservoir.Configuration.highPressure,
     pumSch=pumSch,
     m_flow_nominal=m_flow_nominal,
     isMaster=true,

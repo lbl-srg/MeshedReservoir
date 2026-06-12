@@ -29,25 +29,31 @@ model ThreeLoops "Three reservoir loops connected"
   parameter Real pumSch[:,:] = if pumSchInd == 1 then pumSchRam elseif pumSchInd == 2 then pumSchDip else pumSchOn
     "Control schedule for pump";
 
+  parameter MeshedReservoir.Configuration configuration = MeshedReservoir.Configuration.highPressure
+    "Configuration of all loops";
+
   SingleLoop loo1(
     m_flow_nominal=m_flow_nominal,
     pumSch = pumSch,
     isMaster=true,
-    mSetAll=mTot_start)
+    mSetAll=mTot_start,
+    configuration=configuration)
     "First loop"
     annotation (Placement(transformation(extent={{-32,-60},{4,-38}})));
   SingleLoop loo2(
     m_flow_nominal=m_flow_nominal,
     pumSch = pumSch,
     isMaster=false,
-    mSetAll=mTot_start)
+    mSetAll=mTot_start,
+    configuration=configuration)
     "Second loop"
     annotation (Placement(transformation(extent={{-26,-20},{10,2}})));
   SingleLoop loo3(
     m_flow_nominal=m_flow_nominal,
     pumSch = pumSch,
     isMaster=false,
-    mSetAll=mTot_start)
+    mSetAll=mTot_start,
+    configuration=configuration)
     "Third loop"
     annotation (Placement(transformation(extent={{-20,20},{16,42}})));
 

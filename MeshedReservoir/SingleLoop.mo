@@ -35,10 +35,8 @@ model SingleLoop "Single loop with expansion vessel"
   parameter Modelica.Units.SI.Volume VTotExp = VTheExp*1.1
     "Total volume of expansion vessel";
 
-  parameter Boolean have_pumpUpstream = true
-    "Set to true to have a pump upstream of the loop connection";
-  parameter Boolean have_expansionVesselUpstream = true
-    "Set to true to have a expansion vessel upstream of the loop connection";
+  parameter MeshedReservoir.Configuration configuration = MeshedReservoir.Configuration.idealPressure
+    "Configuration of the loop";
 
   parameter Real pumSch[:,:]=[
     3600, 0;
@@ -106,20 +104,20 @@ model SingleLoop "Single loop with expansion vessel"
       final m_flow_nominal=m_flow_nominal,
       final dp_nominal=dp_nominal-4*1000) "Flow resistance of loop";
   ConditionalPump pumUp(
-    have_pump=have_pumpUpstream)
+    have_pump=(configuration == MeshedReservoir.Configuration.highPressure))
     "Upstream pump"
     annotation (Placement(transformation(extent={{-60,30},{-40,50}})));
   ConditionalPump pumDow(
-    have_pump=not have_pumpUpstream)
+    have_pump=not (configuration == MeshedReservoir.Configuration.highPressure))
     "Downstream pump"
     annotation (Placement(transformation(extent={{100,30},{120,50}})));
 
   ExpansionVessel expUp
-    if have_expansionVesselUpstream
+    if not (configuration == MeshedReservoir.Configuration.lowPressure)
     "Expansion vessel upstream"
     annotation (Placement(transformation(extent={{-130,50},{-110,70}})));
   ExpansionVessel expDow
-    if not have_expansionVesselUpstream
+    if configuration == MeshedReservoir.Configuration.lowPressure
     "Expansion vessel downstream"
     annotation (Placement(transformation(extent={{130,50},{150,70}})));
 
