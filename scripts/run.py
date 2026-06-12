@@ -333,7 +333,7 @@ def postprocess():
     for i in range(6):
         ax = axes[i]
         data = results[i]
-        time = data['time']
+        time_hours = data['time'] / 3600.0  # Convert to hours
 
         # Calculate normalized pressures
         p1_norm = (data['loo1_pExp']-pMin) / (pMax - pMin)
@@ -346,28 +346,38 @@ def postprocess():
         y3_norm = data['yPum_y3'] / m_flow_nominal
 
         # Plot normalized flow rates (faint gray, 1pt)
-        ax.plot(time, y1_norm, color='lightgray', linewidth=1)
-        ax.plot(time, y2_norm, color='lightgray', linewidth=1)
-        ax.plot(time, y3_norm, color='lightgray', linewidth=1)
+        ax.plot(time_hours, y1_norm, color='lightgray', linewidth=1)
+        ax.plot(time_hours, y2_norm, color='lightgray', linewidth=1)
+        ax.plot(time_hours, y3_norm, color='lightgray', linewidth=1)
 
         # Plot normalized pressures (black, 2pt)
-        ax.plot(time, p1_norm, 'k-', linewidth=2)
-        ax.plot(time, p2_norm, 'k-', linewidth=2)
-        ax.plot(time, p3_norm, 'k-', linewidth=2)
+        ax.plot(time_hours, p1_norm, 'k-', linewidth=2)
+        ax.plot(time_hours, p2_norm, 'k-', linewidth=2)
+        ax.plot(time_hours, p3_norm, 'k-', linewidth=2)
 
-        # Add labels at end of curves
-        ax.text(time[-1], p1_norm[-1], '1', fontsize=10, ha='left', va='center')
-        ax.text(time[-1], p2_norm[-1], '2', fontsize=10, ha='left', va='center')
-        ax.text(time[-1], p3_norm[-1], '3', fontsize=10, ha='left', va='center')
+        # Add labels at t=6000s (1.67 hours) - skip if title contains "ideal"
+        if 'ideal' not in data['label'].lower():
+            t_label_hours = 6000 / 3600.0
+            idx_label = min(range(len(time_hours)), key=lambda i: abs(time_hours[i] - t_label_hours))
+            # Position labels above the line with ~1em spacing (0.05 in normalized units)
+            label_offset = 0.05
+            ax.text(t_label_hours, p1_norm[idx_label] + label_offset, '1', fontsize=15, ha='left', va='bottom')
+            ax.text(t_label_hours, p2_norm[idx_label] + label_offset, '2', fontsize=15, ha='left', va='bottom')
+            ax.text(t_label_hours, p3_norm[idx_label] + label_offset, '3', fontsize=15, ha='left', va='bottom')
 
-#        ax.text(time[-1], y1_norm[-1], '1', fontsize=8, ha='left', va='center', color='gray')
-#        ax.text(time[-1], y2_norm[-1], '2', fontsize=8, ha='left', va='center', color='gray')
-#        ax.text(time[-1], y3_norm[-1], '3', fontsize=8, ha='left', va='center', color='gray')
+        # Tufte-style formatting
+        ax.set_title(data['label'], fontsize=15)
+        ax.set_xlabel('Time [h]', fontsize=14)
+        ax.set_ylabel('Normalized pressure and\nmass flow rate [1]', fontsize=14)
+        ax.tick_params(labelsize=12)
 
-        ax.set_title(data['label'])
-        ax.set_xlabel('Time [s]')
-        ax.set_ylabel('Normalized Value [-]')
-        ax.grid(True, alpha=0.3)
+        # Remove top and right spines
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+
+        # Minimal grid
+        ax.grid(True, alpha=0.2, linewidth=0.5, linestyle='-', color='gray')
+        ax.set_axisbelow(True)
 
     plt.tight_layout()
 
@@ -385,7 +395,7 @@ def postprocess():
     fig2, ax = plt.subplots(figsize=(10, 6))
 
     data = results[6]  # Case 7 (index 6)
-    time = data['time']
+    time_hours = data['time'] / 3600.0  # Convert to hours
 
     # Calculate normalized pressures
     p1_norm = (pMax - data['loo1_pExp']) / (pMax - pMin)
@@ -396,22 +406,36 @@ def postprocess():
     y1_norm = data['yPum_y1'] / m_flow_nominal
 
     # Plot normalized flow rate (faint gray, 1pt)
-    ax.plot(time, y1_norm, color='lightgray', linewidth=1)
+    ax.plot(time_hours, y1_norm, color='lightgray', linewidth=1)
 
     # Plot normalized pressures (black, 2pt)
-    ax.plot(time, p1_norm, 'k-', linewidth=2)
-    ax.plot(time, p2_norm, 'k-', linewidth=2)
-    ax.plot(time, p3_norm, 'k-', linewidth=2)
+    ax.plot(time_hours, p1_norm, 'k-', linewidth=2)
+    ax.plot(time_hours, p2_norm, 'k-', linewidth=2)
+    ax.plot(time_hours, p3_norm, 'k-', linewidth=2)
 
-    # Add labels at end of curves
-    ax.text(time[-1], p1_norm[-1], '1', fontsize=10, ha='left', va='center')
-    ax.text(time[-1], p2_norm[-1], '2', fontsize=10, ha='left', va='center')
-    ax.text(time[-1], p3_norm[-1], '3', fontsize=10, ha='left', va='center')
+    # Add labels at t=6000s (1.67 hours) - skip if title contains "ideal"
+    if 'ideal' not in data['label'].lower():
+        t_label_hours = 6000 / 3600.0
+        idx_label = min(range(len(time_hours)), key=lambda i: abs(time_hours[i] - t_label_hours))
+        # Position labels above the line with ~1em spacing (0.05 in normalized units)
+        label_offset = 0.05
+        ax.text(t_label_hours, p1_norm[idx_label] + label_offset, '1', fontsize=15, ha='left', va='bottom')
+        ax.text(t_label_hours, p2_norm[idx_label] + label_offset, '2', fontsize=15, ha='left', va='bottom')
+        ax.text(t_label_hours, p3_norm[idx_label] + label_offset, '3', fontsize=15, ha='left', va='bottom')
 
-    ax.set_title(data['label'])
-    ax.set_xlabel('Time [s]')
-    ax.set_ylabel('Normalized Value [-]')
-    ax.grid(True, alpha=0.3)
+    # Tufte-style formatting
+    ax.set_title(data['label'], fontsize=15)
+    ax.set_xlabel('Time [h]', fontsize=14)
+    ax.set_ylabel('Normalized pressure and\nmass flow rate [1]', fontsize=14)
+    ax.tick_params(labelsize=12)
+
+    # Remove top and right spines
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+    # Minimal grid
+    ax.grid(True, alpha=0.2, linewidth=0.5, linestyle='-', color='gray')
+    ax.set_axisbelow(True)
 
     plt.tight_layout()
 
