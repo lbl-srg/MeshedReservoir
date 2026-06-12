@@ -24,7 +24,9 @@ model ThreeLoops "Three reservoir loops connected"
     0, m_flow_nominal]
     "Control schedule, pump off for one hour, then ramping up for 1 hour, then full speed";
 
-  parameter Real pumSch[:,:] = pumSchRam
+  parameter Integer pumSchInd = 1 "Index for pump schedule";
+
+  parameter Real pumSch[:,:] = if pumSchInd == 1 then pumSchRam elseif pumSchInd == 2 then pumSchDip else pumSchOn
     "Control schedule for pump";
 
   SingleLoop loo1(
