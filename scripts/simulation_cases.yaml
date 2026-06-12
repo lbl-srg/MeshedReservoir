@@ -113,14 +113,14 @@ cases:
     label: "ideal, on, with heat"
     parameters:
       loo1:
-        have_pumpUpstream: true
+        have_pumpUpstream: false
         have_expansionVesselUpstream: true
         addHeat: false
       loo2:
-        have_pumpUpstream: true
+        have_pumpUpstream: false
         have_expansionVesselUpstream: true
         addHeat: false
       loo3:
-        have_pumpUpstream: true
+        have_pumpUpstream: false
         have_expansionVesselUpstream: true
         addHeat: false
