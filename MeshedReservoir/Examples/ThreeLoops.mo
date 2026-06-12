@@ -24,33 +24,51 @@ model ThreeLoops "Three reservoir loops connected"
     0, m_flow_nominal]
     "Control schedule, pump off for one hour, then ramping up for 1 hour, then full speed";
 
-  parameter Integer pumSchInd = 1 "Index for pump schedule";
+  parameter Integer pumSchInd = 1
+    "Index for pump schedule";
 
-  parameter Real pumSch[:,:] = if pumSchInd == 1 then pumSchRam elseif pumSchInd == 2 then pumSchDip else pumSchOn
+  parameter Real pumSch[:,:] =
+    if pumSchInd == 1 then
+      pumSchRam
+    elseif pumSchInd == 2 then
+      pumSchDip
+    else
+      pumSchOn
     "Control schedule for pump";
 
-  parameter MeshedReservoir.Configuration configuration = MeshedReservoir.Configuration.highPressure
+  parameter Integer conInd = 1
+    "Index for configuration (1: highPressure, 2: idealPressure, 3: lowPressure)";
+
+  parameter MeshedReservoir.Configuration configuration =
+    if conInd == 1 then
+      MeshedReservoir.Configuration.highPressure
+    elseif conInd == 2 then
+      MeshedReservoir.Configuration.idealPressure
+    else
+      MeshedReservoir.Configuration.lowPressure
     "Configuration of all loops";
 
   SingleLoop loo1(
     m_flow_nominal=m_flow_nominal,
-    pumSch = pumSch,
+    pumSch=pumSch,
     isMaster=true,
     mSetAll=mTot_start,
     configuration=configuration)
     "First loop"
     annotation (Placement(transformation(extent={{-32,-60},{4,-38}})));
+
   SingleLoop loo2(
     m_flow_nominal=m_flow_nominal,
-    pumSch = pumSch,
+    pumSch=pumSch,
     isMaster=false,
     mSetAll=mTot_start,
     configuration=configuration)
     "Second loop"
     annotation (Placement(transformation(extent={{-26,-20},{10,2}})));
+
   SingleLoop loo3(
     m_flow_nominal=m_flow_nominal,
-    pumSch = pumSch,
+    pumSch=pumSch,
     isMaster=false,
     mSetAll=mTot_start,
     configuration=configuration)
@@ -81,12 +99,12 @@ equation
           {-50,-80},{-50,-10},{-28,-10}}, color={0,0,127}));
   connect(mTotOth.y, loo1.mAll) annotation (Line(points={{62,-50},{70,-50},{70,-80},
           {-50,-80},{-50,-50},{-34,-50}}, color={0,0,127}));
-  annotation (    experiment(
+  annotation (experiment(
       StopTime=10800,
       Tolerance=1e-05,
-    __Dymola_Algorithm="Cvode"),
+      __Dymola_Algorithm="Cvode"),
     __Dymola_Commands(file="modelica://MeshedReservoir/Resources/Scripts/Dymola/Examples/ThreeLoops.mos"
         "Simulate and plot"),
-    Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
-        coordinateSystem(preserveAspectRatio=false)));
+    Icon(coordinateSystem(preserveAspectRatio=false)),
+    Diagram(coordinateSystem(preserveAspectRatio=false)));
 end ThreeLoops;
