@@ -63,6 +63,15 @@ model SingleLoop "Single loop with expansion vessel"
   parameter Modelica.Units.SI.HeatFlowRate Q_flow = vol.V * rho10 * 4200 * (30-10) / (3*3600)
     "Heat flow rate to heat up volume from 20 to 30 degC in 3 hours";
 
+  Modelica.Blocks.Interfaces.RealOutput pOut(
+    final unit="Pa")
+    "Outlet pressure"
+    annotation (Placement(transformation(extent={{180,80},{200,100}})));
+  Modelica.Blocks.Interfaces.RealOutput pIn(
+    final unit="Pa")
+    "Inlet pressure"
+    annotation (Placement(transformation(extent={{180,100},{200,120}})));
+
   Buildings.Controls.OBC.CDL.Interfaces.RealInput mAll
     "Total mass of all expansion vessels in the system"
     annotation (Placement(transformation(extent={{-220,-20},{-180,20}})));
@@ -243,6 +252,14 @@ equation
     annotation (Line(points={{60,14},{50,14}}, color={0,0,127}));
   connect(yHea.y[1], gai.u)
     annotation (Line(points={{22,14},{26,14}}, color={0,0,127}));
+  connect(pumUp.pIn, pIn) annotation (Line(points={{-39,48},{-30,48},{-30,110},
+          {190,110}}, color={0,0,127}));
+  connect(pumUp.pOut, pOut) annotation (Line(points={{-39,46},{-28,46},{-28,90},
+          {190,90}}, color={0,0,127}));
+  connect(pumDow.pIn, pIn) annotation (Line(points={{121,48},{124,48},{124,110},
+          {190,110}}, color={0,0,127}));
+  connect(pumDow.pOut, pOut) annotation (Line(points={{121,46},{126,46},{126,90},
+          {190,90}}, color={0,0,127}));
   annotation (Icon(coordinateSystem(preserveAspectRatio=false, extent={{-180,-100},
             {180,120}}), graphics={
         Rectangle(

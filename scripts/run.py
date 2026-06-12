@@ -295,18 +295,20 @@ def postprocess():
     m_flow_nominal = results[0]['m_flow_nominal']
     print(f"\nm_flow_nominal = {m_flow_nominal}")
 
-    # Calculate pMin and pMax from first 6 cases
-    print("\nCalculating pressure bounds from first 6 cases...")
+    # Calculate pMin and pMax from first 3 cases (in Pa, will convert to bar)
+    print("\nCalculating pressure bounds from first 3 cases...")
     all_pressures = []
     for i in range(3):
         all_pressures.extend(results[i]['loo1_pExp'])
         all_pressures.extend(results[i]['loo2_pExp'])
         all_pressures.extend(results[i]['loo3_pExp'])
 
-    pMin = min(all_pressures)
-    pMax = max(all_pressures)
-    print(f"pMin = {pMin}")
-    print(f"pMax = {pMax}")
+    pMin_Pa = min(all_pressures)
+    pMax_Pa = max(all_pressures)
+    pMin_bar = pMin_Pa / 100000.0
+    pMax_bar = pMax_Pa / 100000.0
+    print(f"pMin = {pMin_Pa} Pa = {pMin_bar} bar")
+    print(f"pMax = {pMax_Pa} Pa = {pMax_bar} bar")
 
     # Create plots
     print("\nCreating plots...")
@@ -329,25 +331,34 @@ def postprocess():
         time_hours_filtered = time_hours[mask]
         time_hours_shifted = time_hours_filtered - time_start  # Shift to 0-6 hours
 
-        # Calculate normalized pressures
-        p1_norm = (data['loo1_pExp']-pMin) / (pMax - pMin)
-        p2_norm = (data['loo2_pExp']-pMin) / (pMax - pMin)
-        p3_norm = (data['loo3_pExp']-pMin) / (pMax - pMin)
+        # Convert pressures to bar (not normalized)
+        p1_bar = data['loo1_pExp'] / 100000.0
+        p2_bar = data['loo2_pExp'] / 100000.0
+        p3_bar = data['loo3_pExp'] / 100000.0
 
         # Calculate normalized flow rates
         y1_norm = data['yPum_y1'] / m_flow_nominal
         y2_norm = data['yPum_y2'] / m_flow_nominal
         y3_norm = data['yPum_y3'] / m_flow_nominal
 
-        # Plot normalized flow rates (faint gray, 1pt)
-        ax.plot(time_hours_shifted, y1_norm[mask], color='lightgray', linewidth=1)
-        ax.plot(time_hours_shifted, y2_norm[mask], color='lightgray', linewidth=1)
-        ax.plot(time_hours_shifted, y3_norm[mask], color='lightgray', linewidth=1)
+        # Plot pressures on primary y-axis (black, 2pt)
+        ax.plot(time_hours_shifted, p1_bar[mask], 'k-', linewidth=2)
+        ax.plot(time_hours_shifted, p2_bar[mask], 'k-', linewidth=2)
+        ax.plot(time_hours_shifted, p3_bar[mask], 'k-', linewidth=2)
 
-        # Plot normalized pressures (black, 2pt)
-        ax.plot(time_hours_shifted, p1_norm[mask], 'k-', linewidth=2)
-        ax.plot(time_hours_shifted, p2_norm[mask], 'k-', linewidth=2)
-        ax.plot(time_hours_shifted, p3_norm[mask], 'k-', linewidth=2)
+        # Create secondary y-axis for normalized flow rates
+        ax2 = ax.twinx()
+
+        # Plot normalized flow rates on secondary y-axis (faint gray, 1pt)
+        ax2.plot(time_hours_shifted, y1_norm[mask], color='lightgray', linewidth=1)
+        ax2.plot(time_hours_shifted, y2_norm[mask], color='lightgray', linewidth=1)
+        ax2.plot(time_hours_shifted, y3_norm[mask], color='lightgray', linewidth=1)
+
+        # Set consistent y-axis range for pressure (primary axis)
+        ax.set_ylim([0, pMax_bar])
+
+        # Set secondary y-axis range for normalized flow rates
+        ax2.set_ylim([0, 1.2])
 
         # Add labels at t=6000s relative to window start (1.67 hours from start of 54h window)
         if 'ideal' not in data['label'].lower():
@@ -361,24 +372,26 @@ def postprocess():
                 t_label_shifted = t_label_hours_abs - time_start
                 idx_label = min(range(len(time_hours_shifted)),
                               key=lambda j: abs(time_hours_shifted[j] - t_label_shifted))
-                # Position labels above the line with ~1em spacing (0.05 in normalized units)
-                label_offset = 0.05
-                ax.text(t_label_shifted, p1_norm[mask][idx_label] + label_offset, '1',
+                # Position labels above the line with offset in bar units
+                label_offset = (pMax_bar - pMin_bar) * 0.03
+                ax.text(t_label_shifted, p1_bar[mask][idx_label] + label_offset, '1',
                        fontsize=15, ha='left', va='bottom')
-                ax.text(t_label_shifted, p2_norm[mask][idx_label] + label_offset, '2',
+                ax.text(t_label_shifted, p2_bar[mask][idx_label] + label_offset, '2',
                        fontsize=15, ha='left', va='bottom')
-                ax.text(t_label_shifted, p3_norm[mask][idx_label] + label_offset, '3',
+                ax.text(t_label_shifted, p3_bar[mask][idx_label] + label_offset, '3',
                        fontsize=15, ha='left', va='bottom')
 
         # Tufte-style formatting
         ax.set_title(data['label'], fontsize=15)
         ax.set_xlabel('Time [h]', fontsize=14)
-        ax.set_ylabel('Normalized pressure and\nmass flow rate [1]', fontsize=14)
+        ax.set_ylabel('Expansion vessel pressure [bar]', fontsize=14)
+        ax2.set_ylabel('Normalized mass flow rate [1]', fontsize=14)
         ax.tick_params(labelsize=12)
+        ax2.tick_params(labelsize=12)
 
-        # Remove top and right spines
+        # Remove top spine (right spine kept for secondary axis)
         ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
+        ax2.spines['top'].set_visible(False)
 
         # Minimal grid
         ax.grid(True, alpha=0.2, linewidth=0.5, linestyle='-', color='gray')
@@ -395,7 +408,7 @@ def postprocess():
     print(f"    Saved: {plot1_png.name}")
     plt.close(fig1)
 
-    # Plot 2: Single plot with case 7 (index 6)
+    # Plot 2: Single plot with case 7 (index 3)
     print("  Creating single plot for case 7...")
     fig2, ax = plt.subplots(figsize=(10, 6))
 
@@ -410,21 +423,30 @@ def postprocess():
     time_hours_filtered = time_hours[mask]
     time_hours_shifted = time_hours_filtered - time_start  # Shift to 0-6 hours
 
-    # Calculate normalized pressures
-    p1_norm = (pMax - data['loo1_pExp']) / (pMax - pMin)
-    p2_norm = (pMax - data['loo2_pExp']) / (pMax - pMin)
-    p3_norm = (pMax - data['loo3_pExp']) / (pMax - pMin)
+    # Convert pressures to bar (not normalized)
+    p1_bar = data['loo1_pExp'] / 100000.0
+    p2_bar = data['loo2_pExp'] / 100000.0
+    p3_bar = data['loo3_pExp'] / 100000.0
 
     # Calculate normalized flow rate for yPum.y[1]
     y1_norm = data['yPum_y1'] / m_flow_nominal
 
-    # Plot normalized flow rate (faint gray, 1pt)
-    ax.plot(time_hours_shifted, y1_norm[mask], color='lightgray', linewidth=1)
+    # Plot pressures on primary y-axis (black, 2pt)
+    ax.plot(time_hours_shifted, p1_bar[mask], 'k-', linewidth=2)
+    ax.plot(time_hours_shifted, p2_bar[mask], 'k-', linewidth=2)
+    ax.plot(time_hours_shifted, p3_bar[mask], 'k-', linewidth=2)
 
-    # Plot normalized pressures (black, 2pt)
-    ax.plot(time_hours_shifted, p1_norm[mask], 'k-', linewidth=2)
-    ax.plot(time_hours_shifted, p2_norm[mask], 'k-', linewidth=2)
-    ax.plot(time_hours_shifted, p3_norm[mask], 'k-', linewidth=2)
+    # Create secondary y-axis for normalized flow rate
+    ax2 = ax.twinx()
+
+    # Plot normalized flow rate on secondary y-axis (faint gray, 1pt)
+    ax2.plot(time_hours_shifted, y1_norm[mask], color='lightgray', linewidth=1)
+
+    # Set consistent y-axis range for pressure (primary axis)
+    ax.set_ylim([0, pMax_bar])
+
+    # Set secondary y-axis range for normalized flow rate
+    ax2.set_ylim([0, 1.2])
 
     # Add labels at t=6000s relative to window start
     if 'ideal' not in data['label'].lower():
@@ -437,24 +459,26 @@ def postprocess():
             t_label_shifted = t_label_hours_abs - time_start
             idx_label = min(range(len(time_hours_shifted)),
                           key=lambda j: abs(time_hours_shifted[j] - t_label_shifted))
-            # Position labels above the line with ~1em spacing (0.05 in normalized units)
-            label_offset = 0.05
-            ax.text(t_label_shifted, p1_norm[mask][idx_label] + label_offset, '1',
+            # Position labels above the line with offset in bar units
+            label_offset = (pMax_bar - pMin_bar) * 0.03
+            ax.text(t_label_shifted, p1_bar[mask][idx_label] + label_offset, '1',
                    fontsize=15, ha='left', va='bottom')
-            ax.text(t_label_shifted, p2_norm[mask][idx_label] + label_offset, '2',
+            ax.text(t_label_shifted, p2_bar[mask][idx_label] + label_offset, '2',
                    fontsize=15, ha='left', va='bottom')
-            ax.text(t_label_shifted, p3_norm[mask][idx_label] + label_offset, '3',
+            ax.text(t_label_shifted, p3_bar[mask][idx_label] + label_offset, '3',
                    fontsize=15, ha='left', va='bottom')
 
     # Tufte-style formatting
     ax.set_title(data['label'], fontsize=15)
     ax.set_xlabel('Time [h]', fontsize=14)
-    ax.set_ylabel('Normalized pressure and\nmass flow rate [1]', fontsize=14)
+    ax.set_ylabel('Expansion vessel pressure [bar]', fontsize=14)
+    ax2.set_ylabel('Normalized mass flow rate [1]', fontsize=14)
     ax.tick_params(labelsize=12)
+    ax2.tick_params(labelsize=12)
 
-    # Remove top and right spines
+    # Remove top spine (right spine kept for secondary axis)
     ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
+    ax2.spines['top'].set_visible(False)
 
     # Minimal grid
     ax.grid(True, alpha=0.2, linewidth=0.5, linestyle='-', color='gray')

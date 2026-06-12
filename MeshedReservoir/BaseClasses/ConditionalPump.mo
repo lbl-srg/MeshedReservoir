@@ -31,6 +31,20 @@ model ConditionalPump "Model that allows adding or removing a pump"
     "Dummy pipe connection with no pressure loss"
     annotation (Placement(transformation(extent={{-10,-50},{10,-30}})));
 
+  Buildings.Fluid.Sensors.Pressure pPumIn(redeclare package Medium = Medium)
+    "Inlet pressure"
+    annotation (Placement(transformation(extent={{-90,50},{-70,70}})));
+  Buildings.Fluid.Sensors.Pressure pPumOut(redeclare package Medium = Medium)
+    "Outlet pressure"
+    annotation (Placement(transformation(extent={{70,50},{90,70}})));
+  Modelica.Blocks.Interfaces.RealOutput pOut(
+    final unit="Pa")
+    "Outlet pressure"
+    annotation (Placement(transformation(extent={{100,50},{120,70}})));
+  Modelica.Blocks.Interfaces.RealOutput pIn(
+    final unit="Pa")
+    "Inlet pressure"
+    annotation (Placement(transformation(extent={{100,70},{120,90}})));
 equation
   connect(port_a, mov.port_a) annotation (Line(points={{-100,0},{-60,0},{-60,40},
           {-10,40}}, color={0,127,255}));
@@ -42,6 +56,14 @@ equation
           {100,0}}, color={0,127,255}));
   connect(mSet_flow, mov.m_flow_in)
     annotation (Line(points={{-120,80},{0,80},{0,52}}, color={0,0,127}));
+  connect(pPumIn.port, port_a)
+    annotation (Line(points={{-80,50},{-80,0},{-100,0}}, color={0,127,255}));
+  connect(pPumOut.port, port_b)
+    annotation (Line(points={{80,50},{80,0},{100,0}}, color={0,127,255}));
+  connect(pPumOut.p, pOut)
+    annotation (Line(points={{91,60},{110,60}}, color={0,0,127}));
+  connect(pPumIn.p, pIn) annotation (Line(points={{-69,60},{64,60},{64,80},{110,
+          80}}, color={0,0,127}));
   annotation (
     defaultComponentName="pum",
     Icon(graphics={Ellipse(
