@@ -26,24 +26,23 @@ def mat_name(case_index, pumSch, params):
     Args:
         case_index: Index of the case
         pumSch: Pump schedule (pumSchRam, pumSchDip, or pumSchOn)
-        params: Dictionary with loo1, loo2, loo3 parameters
+        params: Dictionary with conInd and loop parameters
 
     Returns:
         str: Filename for the .mat file
     """
-    # Extract parameters for loo1 (all loops have same settings)
-    loo1_params = params['loo1']
-    have_pumpUpstream = loo1_params['have_pumpUpstream']
-    have_expansionVesselUpstream = loo1_params['have_expansionVesselUpstream']
+    # Extract configuration index (1: highPressure, 2: idealPressure, 3: lowPressure)
+    conInd = params['conInd']
 
     # Create descriptive filename
     pump_type = pumSch.replace('pumSch', '').lower()
 
-    if have_pumpUpstream and have_expansionVesselUpstream:
+    # Map conInd to filename prefix
+    if conInd == 1:
         config = "high"
-    elif not have_pumpUpstream and have_expansionVesselUpstream:
+    elif conInd == 2:
         config = "ideal"
-    else:
+    else:  # conInd == 3
         config = "low"
 
     filename = f"ThreeLoops_{config}_{pump_type}_case{case_index}.mat"
@@ -66,7 +65,7 @@ def check_simulation_completion(mat_file, expected_stop_time, tolerance=1e-6):
         from buildingspy.io.outputfile import Reader
 
         r = Reader(str(mat_file), "dymola")
-        time = r.values("time")[0]
+        time = r.values("loo1.pExp")[0]
         final_time = time[-1]
 
         if abs(final_time - expected_stop_time) > tolerance:
@@ -131,12 +130,17 @@ def simulate_case(args):
             pumSchInd = 3
         s.addParameters({'pumSchInd': pumSchInd})
 
+        # Set configuration index (1: highPressure, 2: idealPressure, 3: lowPressure)
+        conInd = case_data['parameters']['conInd']
+        s.addParameters({'conInd': conInd})
+
         # Set parameters for each loop
         for loop_name in ['loo1', 'loo2', 'loo3']:
-            loop_params = case_data['parameters'][loop_name]
-            for param_name, param_value in loop_params.items():
-                full_param_name = f"{loop_name}.{param_name}"
-                s.addParameters({full_param_name: param_value})
+            if loop_name in case_data['parameters']:
+                loop_params = case_data['parameters'][loop_name]
+                for param_name, param_value in loop_params.items():
+                    full_param_name = f"{loop_name}.{param_name}"
+                    s.addParameters({full_param_name: param_value})
 
         # Run simulation
         print(f"Simulating case {case_index}: {case_data['label']}")
@@ -288,14 +292,14 @@ def postprocess():
             'loo1_pExp': r.values("loo1.pExp")[1],
             'loo2_pExp': r.values("loo2.pExp")[1],
             'loo3_pExp': r.values("loo3.pExp")[1],
-            'yPum_y1': r.values("yPum.y[1]")[1],
-            'yPum_y2': r.values("yPum.y[2]")[1],
-            'yPum_y3': r.values("yPum.y[3]")[1],
+            'yPum_y1': r.values("loo1.yPum.y[1]")[1],
+            'yPum_y2': r.values("loo2.yPum.y[1]")[1],
+            'yPum_y3': r.values("loo3.yPum.y[1]")[1],
         }
 
         # Get m_flow_nominal from first case
         if i == 0:
-            m_flow_nominal = r.values("m_flow_nominal")[0][0]
+            m_flow_nominal = r.values("m_flow_nominal")[1][0]
             data['m_flow_nominal'] = m_flow_nominal
 
         results.append(data)
@@ -332,9 +336,9 @@ def postprocess():
         time = data['time']
 
         # Calculate normalized pressures
-        p1_norm = (pMax - data['loo1_pExp']) / (pMax - pMin)
-        p2_norm = (pMax - data['loo2_pExp']) / (pMax - pMin)
-        p3_norm = (pMax - data['loo3_pExp']) / (pMax - pMin)
+        p1_norm = (data['loo1_pExp']-pMin) / (pMax - pMin)
+        p2_norm = (data['loo2_pExp']-pMin) / (pMax - pMin)
+        p3_norm = (data['loo3_pExp']-pMin) / (pMax - pMin)
 
         # Calculate normalized flow rates
         y1_norm = data['yPum_y1'] / m_flow_nominal
@@ -356,9 +360,9 @@ def postprocess():
         ax.text(time[-1], p2_norm[-1], '2', fontsize=10, ha='left', va='center')
         ax.text(time[-1], p3_norm[-1], '3', fontsize=10, ha='left', va='center')
 
-        ax.text(time[-1], y1_norm[-1], '1', fontsize=8, ha='left', va='center', color='gray')
-        ax.text(time[-1], y2_norm[-1], '2', fontsize=8, ha='left', va='center', color='gray')
-        ax.text(time[-1], y3_norm[-1], '3', fontsize=8, ha='left', va='center', color='gray')
+#        ax.text(time[-1], y1_norm[-1], '1', fontsize=8, ha='left', va='center', color='gray')
+#        ax.text(time[-1], y2_norm[-1], '2', fontsize=8, ha='left', va='center', color='gray')
+#        ax.text(time[-1], y3_norm[-1], '3', fontsize=8, ha='left', va='center', color='gray')
 
         ax.set_title(data['label'])
         ax.set_xlabel('Time [s]')

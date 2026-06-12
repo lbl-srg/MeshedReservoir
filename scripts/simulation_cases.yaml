@@ -2,7 +2,7 @@ simulation_settings:
   model_name: MeshedReservoir.Examples.ThreeLoops
   startTime: 0
   stopTime: 10800
-  solver: CVode
+  solver: Radau
   tolerance: 1.0e-6
 
 cases:
@@ -10,117 +10,82 @@ cases:
   - pumSch: pumSchRam
     label: "high ramp"
     parameters:
+      conInd: 1  # highPressure
       loo1:
-        have_pumpUpstream: true
-        have_expansionVesselUpstream: true
         addHeat: false
       loo2:
-        have_pumpUpstream: true
-        have_expansionVesselUpstream: true
         addHeat: false
       loo3:
-        have_pumpUpstream: true
-        have_expansionVesselUpstream: true
         addHeat: false
 
   # Case 2: pumSchRam with ideal settings
   - pumSch: pumSchRam
     label: "ideal ramp"
     parameters:
+      conInd: 2  # idealPressure
       loo1:
-        have_pumpUpstream: false
-        have_expansionVesselUpstream: true
         addHeat: false
       loo2:
-        have_pumpUpstream: false
-        have_expansionVesselUpstream: true
         addHeat: false
       loo3:
-        have_pumpUpstream: false
-        have_expansionVesselUpstream: true
         addHeat: false
 
   # Case 3: pumSchRam with low settings
   - pumSch: pumSchRam
     label: "low ramp"
     parameters:
+      conInd: 3  # lowPressure
       loo1:
-        have_pumpUpstream: false
-        have_expansionVesselUpstream: false
         addHeat: false
       loo2:
-        have_pumpUpstream: false
-        have_expansionVesselUpstream: false
         addHeat: false
       loo3:
-        have_pumpUpstream: false
-        have_expansionVesselUpstream: false
         addHeat: false
 
   # Case 4: pumSchDip with high settings
   - pumSch: pumSchDip
     label: "high trapezoid"
     parameters:
+      conInd: 1  # highPressure
       loo1:
-        have_pumpUpstream: true
-        have_expansionVesselUpstream: true
         addHeat: false
       loo2:
-        have_pumpUpstream: true
-        have_expansionVesselUpstream: true
         addHeat: false
       loo3:
-        have_pumpUpstream: true
-        have_expansionVesselUpstream: true
         addHeat: false
 
   # Case 5: pumSchDip with ideal settings
   - pumSch: pumSchDip
     label: "ideal trapezoid"
     parameters:
+      conInd: 2  # idealPressure
       loo1:
-        have_pumpUpstream: false
-        have_expansionVesselUpstream: true
         addHeat: false
       loo2:
-        have_pumpUpstream: false
-        have_expansionVesselUpstream: true
         addHeat: false
       loo3:
-        have_pumpUpstream: false
-        have_expansionVesselUpstream: true
         addHeat: false
 
   # Case 6: pumSchDip with low settings
   - pumSch: pumSchDip
     label: "low trapezoid"
     parameters:
+      conInd: 3  # lowPressure
       loo1:
-        have_pumpUpstream: false
-        have_expansionVesselUpstream: false
         addHeat: false
       loo2:
-        have_pumpUpstream: false
-        have_expansionVesselUpstream: false
         addHeat: false
       loo3:
-        have_pumpUpstream: false
-        have_expansionVesselUpstream: false
         addHeat: false
 
   # Case 7: pumSchOn with ideal settings
   - pumSch: pumSchOn
     label: "ideal, on, with heat"
     parameters:
+      conInd: 2  # idealPressure
       loo1:
-        have_pumpUpstream: false
-        have_expansionVesselUpstream: true
         addHeat: false
       loo2:
-        have_pumpUpstream: false
-        have_expansionVesselUpstream: true
         addHeat: false
       loo3:
-        have_pumpUpstream: false
-        have_expansionVesselUpstream: true
         addHeat: false

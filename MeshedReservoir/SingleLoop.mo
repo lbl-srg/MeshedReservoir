@@ -1,10 +1,20 @@
 within MeshedReservoir;
 model SingleLoop "Single loop with expansion vessel"
-  final package Medium = Buildings.Media.Specialized.Water.TemperatureDependentDensity(
-    p_default=600000)
+  final package Medium = Buildings.Media.Specialized.Water.TemperatureDependentDensity
     "Medium model for water";
   final package MediumAir = Modelica.Media.Air.SimpleAir
     "Medium model for air";
+
+  parameter Modelica.Units.SI.AbsolutePressure pMax=1600000
+    "Maximum pressure, above which the simulation stops with an assertion"
+    annotation(Dialog(group="Static pressures"));
+  parameter Modelica.Units.SI.AbsolutePressure pMin=120000
+    "Minimum pressure, below which the simulation stops with an assertion"
+    annotation(Dialog(group="Static pressures"));
+  parameter Modelica.Units.SI.AbsolutePressure p_start=600000
+    "Start value of pressure"
+    annotation(Dialog(group="Static pressures"));
+
   parameter Modelica.Units.SI.MassFlowRate m_flow_nominal = 685
     "Design mass flow rate";
   parameter Modelica.Units.SI.PressureDifference dp_nominal = 479E3
@@ -98,7 +108,9 @@ model SingleLoop "Single loop with expansion vessel"
     final isMaster=isMaster,
     final VTot=VTotExp,
     final mSetAll=mSetAll,
-    pMax=1600000) "Expansion vessel";
+    final p_start=p_start,
+    final pMin=pMin,
+    final pMax=pMax) "Expansion vessel";
   model PressureDrop = Buildings.Fluid.FixedResistances.PressureDrop(
       redeclare final package Medium = Medium,
       final m_flow_nominal=m_flow_nominal) "Flow resistance of loop";
@@ -163,6 +175,7 @@ model SingleLoop "Single loop with expansion vessel"
     if addHeat
     "Heat source"
     annotation (Placement(transformation(extent={{60,4},{80,24}})));
+
 equation
   connect(jun11.port_2, jun12.port_1)
     annotation (Line(points={{-10,40},{10,40}}, color={0,127,255}));

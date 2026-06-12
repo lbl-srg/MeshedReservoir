@@ -33,11 +33,11 @@ model OneLoop "Single reservoir loop"
     isMaster=true,
     mSetAll=mTot_start)
     "Single loop"
-    annotation (Placement(transformation(extent={{-32,-60},{4,-38}})));
+    annotation (Placement(transformation(extent={{-18,-10},{18,12}})));
 
 equation
-  connect(loo1.m, loo1.mAll) annotation (Line(points={{5,-44},{10,-44},{10,-70},{
-          -40,-70},{-40,-50},{-34,-50}}, color={0,0,127}));
+  connect(loo1.m, loo1.mAll) annotation (Line(points={{19,6},{24,6},{24,-20},{-26,
+          -20},{-26,0},{-20,0}},         color={0,0,127}));
   annotation (    experiment(
       StopTime=10800,
       Tolerance=1e-05,
