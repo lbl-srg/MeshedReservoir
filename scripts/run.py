@@ -1,0 +1,464 @@
+#!/usr/bin/env python3
+"""
+Simulation and post-processing script for MeshedReservoir models using BuildingsPy.
+"""
+
+import os
+import sys
+import argparse
+import yaml
+import shutil
+from pathlib import Path
+import multiprocessing as mp
+
+# Get the directory where this script is located
+SCRIPT_DIR = Path(__file__).parent.absolute()
+PROJECT_DIR = SCRIPT_DIR.parent
+OUT_DIR = PROJECT_DIR / "out"
+SIM_DIR = OUT_DIR / "simulations"
+YAML_FILE = SCRIPT_DIR / "simulation_cases.yaml"
+
+
+def mat_name(case_index, pumSch, params):
+    """
+    Generate the .mat filename based on parameter settings.
+
+    Args:
+        case_index: Index of the case
+        pumSch: Pump schedule (pumSchRam, pumSchDip, or pumSchOn)
+        params: Dictionary with loo1, loo2, loo3 parameters
+
+    Returns:
+        str: Filename for the .mat file
+    """
+    # Extract parameters for loo1 (all loops have same settings)
+    loo1_params = params['loo1']
+    have_pumpUpstream = loo1_params['have_pumpUpstream']
+    have_expansionVesselUpstream = loo1_params['have_expansionVesselUpstream']
+
+    # Create descriptive filename
+    pump_type = pumSch.replace('pumSch', '').lower()
+
+    if have_pumpUpstream and have_expansionVesselUpstream:
+        config = "high"
+    elif not have_pumpUpstream and have_expansionVesselUpstream:
+        config = "ideal"
+    else:
+        config = "low"
+
+    filename = f"ThreeLoops_{config}_{pump_type}_case{case_index}.mat"
+    return filename
+
+
+def check_simulation_completion(mat_file, expected_stop_time, tolerance=1e-6):
+    """
+    Check if simulation completed successfully by verifying final time.
+
+    Args:
+        mat_file: Path to .mat file
+        expected_stop_time: Expected final time
+        tolerance: Tolerance for comparison
+
+    Returns:
+        tuple: (success, final_time, error_message)
+    """
+    try:
+        from buildingspy.io.outputfile import Reader
+
+        r = Reader(str(mat_file), "dymola")
+        time = r.values("time")[0]
+        final_time = time[-1]
+
+        if abs(final_time - expected_stop_time) > tolerance:
+            error_msg = f"Simulation failed: {mat_file.name} - Final time {final_time} != {expected_stop_time}"
+            return False, final_time, error_msg
+
+        return True, final_time, None
+
+    except Exception as e:
+        error_msg = f"Error reading {mat_file.name}: {str(e)}"
+        return False, None, error_msg
+
+
+def simulate_case(args):
+    """
+    Simulate a single case (for parallel execution).
+
+    Args:
+        args: Tuple of (case_index, case_data, settings, base_sim_dir, tool)
+
+    Returns:
+        tuple: (success, mat_file_path, error_message)
+    """
+    case_index, case_data, settings, base_sim_dir, tool = args
+
+    # Import the correct Simulator class based on tool
+    if tool == "dymola":
+        from buildingspy.simulate.Dymola import Simulator
+    else:
+        from buildingspy.simulate.OpenModelica import Simulator
+
+    model_name = settings['model_name']
+
+    # Get the case name (mat filename without extension)
+    case_name = mat_name(case_index, case_data['pumSch'], case_data['parameters']).replace('.mat', '')
+
+    # Create case-specific directory
+    case_dir = base_sim_dir / case_name
+    case_dir.mkdir(parents=True, exist_ok=True)
+
+    # Mat file will be in the case directory
+    mat_file = case_dir / f"{case_name}.mat"
+
+    try:
+        # Create simulator with case-specific output directory
+        s = Simulator(model_name, outputDirectory=str(case_dir))
+
+        # Set simulation parameters
+        s.setStartTime(settings['startTime'])
+        s.setStopTime(settings['stopTime'])
+        s.setSolver(settings['solver'])
+        s.setTolerance(settings['tolerance'])
+        s.setResultFile(f"{case_name}")
+
+        # Set pumSch parameter as Modelica identifier (not quoted string)
+        pumSch_value = case_data['pumSch']
+        if pumSch_value == "pumSchRam":
+            pumSchInd = 1
+        elif pumSch_value == "pumSchDip":
+            pumSchInd = 2
+        else:
+            pumSchInd = 3
+        s.addParameters({'pumSchInd': pumSchInd})
+
+        # Set parameters for each loop
+        for loop_name in ['loo1', 'loo2', 'loo3']:
+            loop_params = case_data['parameters'][loop_name]
+            for param_name, param_value in loop_params.items():
+                full_param_name = f"{loop_name}.{param_name}"
+                s.addParameters({full_param_name: param_value})
+
+        # Run simulation
+        print(f"Simulating case {case_index}: {case_data['label']}")
+        s.showGUI(False)
+        s.exitSimulator(True)
+        s.simulate()
+
+        # Check if simulation completed
+        success, final_time, error_msg = check_simulation_completion(mat_file, settings['stopTime'])
+
+        if not success:
+            return False, mat_file, error_msg
+
+        print(f"Completed case {case_index}: {case_data['label']}")
+        return True, mat_file, None
+
+    except Exception as e:
+        error_msg = f"Error simulating case {case_index}: {str(e)}"
+        return False, mat_file, error_msg
+
+
+def simulate(n_processors=1, tool="dymola"):
+    """
+    Run simulations for all cases defined in YAML file.
+
+    Args:
+        n_processors: Number of processors for parallel execution
+        tool: Simulation tool ("dymola" or "openmodelica")
+    """
+    print(f"\n{'='*60}")
+    print(f"SIMULATION")
+    print(f"{'='*60}\n")
+
+    # Load YAML configuration
+    with open(YAML_FILE, 'r') as f:
+        config = yaml.safe_load(f)
+
+    settings = config['simulation_settings']
+    cases = config['cases']
+
+    # Delete and recreate simulation directory
+    if SIM_DIR.exists():
+        print(f"Deleting existing simulation directory: {SIM_DIR}")
+        shutil.rmtree(SIM_DIR)
+
+    # Create directories
+    OUT_DIR.mkdir(exist_ok=True)
+    SIM_DIR.mkdir(exist_ok=True)
+    print(f"Created output directory: {SIM_DIR}\n")
+
+    # Prepare arguments for simulation
+    sim_args = [
+        (i, case_data, settings, SIM_DIR, tool)
+        for i, case_data in enumerate(cases)
+    ]
+
+    # Run simulations
+    # Ensure simulation directory exists
+    SIM_DIR.mkdir(parents=True, exist_ok=True)
+
+    if n_processors == 1:
+        print(f"Running simulations sequentially...\n")
+        results = [simulate_case(arg) for arg in sim_args]
+    else:
+        print(f"Running simulations in parallel with {n_processors} processors...\n")
+        with mp.Pool(processes=n_processors) as pool:
+            results = pool.map(simulate_case, sim_args)
+
+    # Check results
+    all_success = True
+    for success, mat_file, error_msg in results:
+        if not success:
+            print(f"ERROR: {error_msg}")
+            all_success = False
+
+    if not all_success:
+        print("\n" + "="*60)
+        print("SIMULATION FAILED - See errors above")
+        print("="*60)
+        sys.exit(1)
+
+    # Clean up auxiliary files from case directories
+    print("\nCleaning up auxiliary files...")
+    cleanup_patterns = ['dsin.txt', 'dsmodel.txt', 'dymosim', 'dsfinal.txt']
+    for pattern in cleanup_patterns:
+        # Search recursively in case subdirectories
+        for file in SIM_DIR.glob(f"*/{pattern}"):
+            file.unlink()
+            print(f"  Deleted: {file.parent.name}/{file.name}")
+
+    print("\n" + "="*60)
+    print("SIMULATION COMPLETED SUCCESSFULLY")
+    print("="*60 + "\n")
+
+
+def postprocess():
+    """
+    Post-process simulation results and create plots.
+    """
+    import matplotlib.pyplot as plt
+
+    print(f"\n{'='*60}")
+    print(f"POST-PROCESSING")
+    print(f"{'='*60}\n")
+
+    # Delete existing plots in out directory (not subdirectories)
+    print("Deleting existing plots in out directory...")
+    for ext in ['*.pdf', '*.png']:
+        for file in OUT_DIR.glob(ext):
+            file.unlink()
+            print(f"  Deleted: {file.name}")
+
+    # Load YAML configuration
+    with open(YAML_FILE, 'r') as f:
+        config = yaml.safe_load(f)
+
+    settings = config['simulation_settings']
+    cases = config['cases']
+
+    # Import Reader for reading .mat files
+    from buildingspy.io.outputfile import Reader
+
+    # Read all simulation results
+    print("\nReading simulation results...")
+    results = []
+    for i, case_data in enumerate(cases):
+        # Get the case name (mat filename without extension)
+        case_name = mat_name(i, case_data['pumSch'], case_data['parameters']).replace('.mat', '')
+
+        # Mat file is in case-specific directory
+        mat_file = SIM_DIR / case_name / f"{case_name}.mat"
+
+        if not mat_file.exists():
+            print(f"ERROR: Expected output file not found: {mat_file}")
+            sys.exit(1)
+
+        # Check simulation completion
+        success, final_time, error_msg = check_simulation_completion(mat_file, settings['stopTime'])
+        if not success:
+            print(f"ERROR: {error_msg}")
+            sys.exit(1)
+
+        # Read data
+        r = Reader(str(mat_file), "dymola")
+
+        data = {
+            'label': case_data['label'],
+            'time': r.values("loo1.pExp")[0],
+            'loo1_pExp': r.values("loo1.pExp")[1],
+            'loo2_pExp': r.values("loo2.pExp")[1],
+            'loo3_pExp': r.values("loo3.pExp")[1],
+            'yPum_y1': r.values("yPum.y[1]")[1],
+            'yPum_y2': r.values("yPum.y[2]")[1],
+            'yPum_y3': r.values("yPum.y[3]")[1],
+        }
+
+        # Get m_flow_nominal from first case
+        if i == 0:
+            m_flow_nominal = r.values("m_flow_nominal")[0][0]
+            data['m_flow_nominal'] = m_flow_nominal
+
+        results.append(data)
+        print(f"  Read case {i}: {case_data['label']}")
+
+    # Set m_flow_nominal
+    m_flow_nominal = results[0]['m_flow_nominal']
+    print(f"\nm_flow_nominal = {m_flow_nominal}")
+
+    # Calculate pMin and pMax from first 6 cases
+    print("\nCalculating pressure bounds from first 6 cases...")
+    all_pressures = []
+    for i in range(6):
+        all_pressures.extend(results[i]['loo1_pExp'])
+        all_pressures.extend(results[i]['loo2_pExp'])
+        all_pressures.extend(results[i]['loo3_pExp'])
+
+    pMin = min(all_pressures)
+    pMax = max(all_pressures)
+    print(f"pMin = {pMin}")
+    print(f"pMax = {pMax}")
+
+    # Create plots
+    print("\nCreating plots...")
+
+    # Plot 1: 3x2 grid with all 6 cases (first 6 only)
+    print("  Creating 3x2 grid plot...")
+    fig1, axes = plt.subplots(2, 3, figsize=(15, 10))
+    axes = axes.flatten()
+
+    for i in range(6):
+        ax = axes[i]
+        data = results[i]
+        time = data['time']
+
+        # Calculate normalized pressures
+        p1_norm = (pMax - data['loo1_pExp']) / (pMax - pMin)
+        p2_norm = (pMax - data['loo2_pExp']) / (pMax - pMin)
+        p3_norm = (pMax - data['loo3_pExp']) / (pMax - pMin)
+
+        # Calculate normalized flow rates
+        y1_norm = data['yPum_y1'] / m_flow_nominal
+        y2_norm = data['yPum_y2'] / m_flow_nominal
+        y3_norm = data['yPum_y3'] / m_flow_nominal
+
+        # Plot normalized flow rates (faint gray, 1pt)
+        ax.plot(time, y1_norm, color='lightgray', linewidth=1)
+        ax.plot(time, y2_norm, color='lightgray', linewidth=1)
+        ax.plot(time, y3_norm, color='lightgray', linewidth=1)
+
+        # Plot normalized pressures (black, 2pt)
+        ax.plot(time, p1_norm, 'k-', linewidth=2)
+        ax.plot(time, p2_norm, 'k-', linewidth=2)
+        ax.plot(time, p3_norm, 'k-', linewidth=2)
+
+        # Add labels at end of curves
+        ax.text(time[-1], p1_norm[-1], '1', fontsize=10, ha='left', va='center')
+        ax.text(time[-1], p2_norm[-1], '2', fontsize=10, ha='left', va='center')
+        ax.text(time[-1], p3_norm[-1], '3', fontsize=10, ha='left', va='center')
+
+        ax.text(time[-1], y1_norm[-1], '1', fontsize=8, ha='left', va='center', color='gray')
+        ax.text(time[-1], y2_norm[-1], '2', fontsize=8, ha='left', va='center', color='gray')
+        ax.text(time[-1], y3_norm[-1], '3', fontsize=8, ha='left', va='center', color='gray')
+
+        ax.set_title(data['label'])
+        ax.set_xlabel('Time [s]')
+        ax.set_ylabel('Normalized Value [-]')
+        ax.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+
+    # Save plot 1
+    plot1_pdf = OUT_DIR / "all_cases_grid.pdf"
+    plot1_png = OUT_DIR / "all_cases_grid.png"
+    fig1.savefig(plot1_pdf, dpi=300, bbox_inches='tight')
+    fig1.savefig(plot1_png, dpi=300, bbox_inches='tight')
+    print(f"    Saved: {plot1_pdf.name}")
+    print(f"    Saved: {plot1_png.name}")
+    plt.close(fig1)
+
+    # Plot 2: Single plot with case 7 (index 6)
+    print("  Creating single plot for case 7...")
+    fig2, ax = plt.subplots(figsize=(10, 6))
+
+    data = results[6]  # Case 7 (index 6)
+    time = data['time']
+
+    # Calculate normalized pressures
+    p1_norm = (pMax - data['loo1_pExp']) / (pMax - pMin)
+    p2_norm = (pMax - data['loo2_pExp']) / (pMax - pMin)
+    p3_norm = (pMax - data['loo3_pExp']) / (pMax - pMin)
+
+    # Calculate normalized flow rate for yPum.y[1]
+    y1_norm = data['yPum_y1'] / m_flow_nominal
+
+    # Plot normalized flow rate (faint gray, 1pt)
+    ax.plot(time, y1_norm, color='lightgray', linewidth=1)
+
+    # Plot normalized pressures (black, 2pt)
+    ax.plot(time, p1_norm, 'k-', linewidth=2)
+    ax.plot(time, p2_norm, 'k-', linewidth=2)
+    ax.plot(time, p3_norm, 'k-', linewidth=2)
+
+    # Add labels at end of curves
+    ax.text(time[-1], p1_norm[-1], '1', fontsize=10, ha='left', va='center')
+    ax.text(time[-1], p2_norm[-1], '2', fontsize=10, ha='left', va='center')
+    ax.text(time[-1], p3_norm[-1], '3', fontsize=10, ha='left', va='center')
+
+    ax.set_title(data['label'])
+    ax.set_xlabel('Time [s]')
+    ax.set_ylabel('Normalized Value [-]')
+    ax.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+
+    # Save plot 2
+    plot2_pdf = OUT_DIR / "case7_single.pdf"
+    plot2_png = OUT_DIR / "case7_single.png"
+    fig2.savefig(plot2_pdf, dpi=300, bbox_inches='tight')
+    fig2.savefig(plot2_png, dpi=300, bbox_inches='tight')
+    print(f"    Saved: {plot2_pdf.name}")
+    print(f"    Saved: {plot2_png.name}")
+    plt.close(fig2)
+
+    print("\n" + "="*60)
+    print("POST-PROCESSING COMPLETED SUCCESSFULLY")
+    print("="*60 + "\n")
+
+
+def main():
+    """Main function to handle command-line arguments and execute tasks."""
+    parser = argparse.ArgumentParser(
+        description='Simulate and post-process MeshedReservoir models using BuildingsPy.',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+
+    parser.add_argument('-s', '--simulate-only', action='store_true',
+                        help='Simulate only (skip post-processing)')
+    parser.add_argument('-p', '--postprocess-only', action='store_true',
+                        help='Post-process only (skip simulation)')
+    parser.add_argument('-n', '--n-processors', type=int, default=None,
+                        help='Number of processors for parallel simulation (default: use all available)')
+    parser.add_argument('-t', '--tool', choices=['dymola', 'openmodelica'], default='dymola',
+                        help='Simulation tool to use (default: dymola)')
+
+    args = parser.parse_args()
+
+    # Determine number of processors
+    if args.n_processors is None:
+        n_processors = mp.cpu_count()
+    else:
+        n_processors = args.n_processors
+
+    # Execute based on arguments
+    if args.simulate_only:
+        simulate(n_processors=n_processors, tool=args.tool)
+    elif args.postprocess_only:
+        postprocess()
+    else:
+        # Default: both simulate and post-process
+        simulate(n_processors=n_processors, tool=args.tool)
+        postprocess()
+
+
+if __name__ == '__main__':
+    main()
