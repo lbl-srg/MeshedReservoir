@@ -165,17 +165,29 @@ model SingleLoop "Single loop with expansion vessel"
   Buildings.Controls.OBC.CDL.Reals.Sources.TimeTable yPum(
     table=pumSch,
     smoothness=Buildings.Controls.OBC.CDL.Types.Smoothness.LinearSegments,
-    extrapolation=Buildings.Controls.OBC.CDL.Types.Extrapolation.HoldLastPoint)
+    extrapolation=Buildings.Controls.OBC.CDL.Types.Extrapolation.Periodic)
     "Time schedule for pump operation"
     annotation (Placement(transformation(extent={{-100,70},{-80,90}})));
 
   Modelica.Blocks.Interfaces.RealOutput pExp "Air pressure in vessel"
     annotation (Placement(transformation(extent={{180,-50},{200,-30}})));
-  Modelica.Thermal.HeatTransfer.Sources.FixedHeatFlow heaSou(Q_flow=Q_flow)
+  Modelica.Thermal.HeatTransfer.Sources.PrescribedHeatFlow
+                                                      heaSou
     if addHeat
     "Heat source"
     annotation (Placement(transformation(extent={{60,4},{80,24}})));
 
+  Buildings.Controls.OBC.CDL.Reals.Sources.TimeTable yHea(
+    table=[0,0; 54,1; 57,0],
+    smoothness=Buildings.Controls.OBC.CDL.Types.Smoothness.ConstantSegments,
+    timeScale=3600)
+    if addHeat
+    "Time schedule for heat input"
+    annotation (Placement(transformation(extent={{0,4},{20,24}})));
+  Buildings.Controls.OBC.CDL.Reals.MultiplyByParameter gai(k=Q_flow)
+    if addHeat
+    "Gain for heat flow rate"
+    annotation (Placement(transformation(extent={{28,4},{48,24}})));
 equation
   connect(jun11.port_2, jun12.port_1)
     annotation (Line(points={{-10,40},{10,40}}, color={0,127,255}));
@@ -227,6 +239,10 @@ equation
           {140,-1}}, color={0,127,255}));
   connect(res1.port_b, jun13.port_1)
     annotation (Line(points={{80,-40},{30,-40}}, color={0,127,255}));
+  connect(heaSou.Q_flow, gai.y)
+    annotation (Line(points={{60,14},{50,14}}, color={0,0,127}));
+  connect(yHea.y[1], gai.u)
+    annotation (Line(points={{22,14},{26,14}}, color={0,0,127}));
   annotation (Icon(coordinateSystem(preserveAspectRatio=false, extent={{-180,-100},
             {180,120}}), graphics={
         Rectangle(

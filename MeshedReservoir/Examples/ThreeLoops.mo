@@ -43,7 +43,7 @@ model ThreeLoops "Three reservoir loops connected"
     1.0*3600, m_flow_nominal;
     2.0*3600, m_flow_nominal;
     2.5*3600, 0;
-    3.0*3600, 0;
+    3.5*3600, 0;
     4.0*3600, m_flow_nominal;
     5.0*3600, m_flow_nominal;
     5.5*3600, 0;
@@ -79,7 +79,8 @@ model ThreeLoops "Three reservoir loops connected"
     pumSch=pumSch_2,
     isMaster=false,
     mSetAll=mTot_start,
-    configuration=configuration)
+    configuration=configuration,
+    addHeat=true)
     "Second loop"
     annotation (Placement(transformation(extent={{-26,-20},{10,2}})));
 
@@ -124,7 +125,7 @@ equation
           -80},{-50,-80},{-50,-50},{-28,-50}},
                                           color={0,0,127}));
   annotation (experiment(
-      StopTime=21600,
+      StopTime=216000,
       Tolerance=1e-06,
       __Dymola_Algorithm="Cvode"),
     __Dymola_Commands(file="modelica://MeshedReservoir/Resources/Scripts/Dymola/Examples/ThreeLoops.mos"

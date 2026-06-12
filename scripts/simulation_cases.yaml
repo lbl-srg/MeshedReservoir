@@ -46,6 +46,6 @@ cases:
       loo1:
         addHeat: false
       loo2:
-        addHeat: false
+        addHeat: true
       loo3:
         addHeat: false

@@ -321,6 +321,14 @@ def postprocess():
         data = results[i]
         time_hours = data['time'] / 3600.0  # Convert to hours
 
+        # Filter data to show only 54-60 hours
+        time_start = 54.0
+        time_end = 60.0
+        mask = (time_hours >= time_start) & (time_hours <= time_end)
+
+        time_hours_filtered = time_hours[mask]
+        time_hours_shifted = time_hours_filtered - time_start  # Shift to 0-6 hours
+
         # Calculate normalized pressures
         p1_norm = (data['loo1_pExp']-pMin) / (pMax - pMin)
         p2_norm = (data['loo2_pExp']-pMin) / (pMax - pMin)
@@ -332,24 +340,35 @@ def postprocess():
         y3_norm = data['yPum_y3'] / m_flow_nominal
 
         # Plot normalized flow rates (faint gray, 1pt)
-        ax.plot(time_hours, y1_norm, color='lightgray', linewidth=1)
-        ax.plot(time_hours, y2_norm, color='lightgray', linewidth=1)
-        ax.plot(time_hours, y3_norm, color='lightgray', linewidth=1)
+        ax.plot(time_hours_shifted, y1_norm[mask], color='lightgray', linewidth=1)
+        ax.plot(time_hours_shifted, y2_norm[mask], color='lightgray', linewidth=1)
+        ax.plot(time_hours_shifted, y3_norm[mask], color='lightgray', linewidth=1)
 
         # Plot normalized pressures (black, 2pt)
-        ax.plot(time_hours, p1_norm, 'k-', linewidth=2)
-        ax.plot(time_hours, p2_norm, 'k-', linewidth=2)
-        ax.plot(time_hours, p3_norm, 'k-', linewidth=2)
+        ax.plot(time_hours_shifted, p1_norm[mask], 'k-', linewidth=2)
+        ax.plot(time_hours_shifted, p2_norm[mask], 'k-', linewidth=2)
+        ax.plot(time_hours_shifted, p3_norm[mask], 'k-', linewidth=2)
 
-        # Add labels at t=6000s (1.67 hours) - skip if title contains "ideal"
+        # Add labels at t=6000s relative to window start (1.67 hours from start of 54h window)
         if 'ideal' not in data['label'].lower():
-            t_label_hours = 6000 / 3600.0
-            idx_label = min(range(len(time_hours)), key=lambda i: abs(time_hours[i] - t_label_hours))
-            # Position labels above the line with ~1em spacing (0.05 in normalized units)
-            label_offset = 0.05
-            ax.text(t_label_hours, p1_norm[idx_label] + label_offset, '1', fontsize=15, ha='left', va='bottom')
-            ax.text(t_label_hours, p2_norm[idx_label] + label_offset, '2', fontsize=15, ha='left', va='bottom')
-            ax.text(t_label_hours, p3_norm[idx_label] + label_offset, '3', fontsize=15, ha='left', va='bottom')
+            # Original t_label was 6000s = 1.67h from simulation start
+            # In 54-60h window (194400-216000s), find corresponding position
+            t_label_seconds = 6000
+            t_label_hours_abs = t_label_seconds / 3600.0
+
+            # Only add labels if this time falls within our window
+            if time_start <= t_label_hours_abs <= time_end:
+                t_label_shifted = t_label_hours_abs - time_start
+                idx_label = min(range(len(time_hours_shifted)),
+                              key=lambda j: abs(time_hours_shifted[j] - t_label_shifted))
+                # Position labels above the line with ~1em spacing (0.05 in normalized units)
+                label_offset = 0.05
+                ax.text(t_label_shifted, p1_norm[mask][idx_label] + label_offset, '1',
+                       fontsize=15, ha='left', va='bottom')
+                ax.text(t_label_shifted, p2_norm[mask][idx_label] + label_offset, '2',
+                       fontsize=15, ha='left', va='bottom')
+                ax.text(t_label_shifted, p3_norm[mask][idx_label] + label_offset, '3',
+                       fontsize=15, ha='left', va='bottom')
 
         # Tufte-style formatting
         ax.set_title(data['label'], fontsize=15)
@@ -383,6 +402,14 @@ def postprocess():
     data = results[3]  # single plot
     time_hours = data['time'] / 3600.0  # Convert to hours
 
+    # Filter data to show only 54-60 hours
+    time_start = 54.0
+    time_end = 60.0
+    mask = (time_hours >= time_start) & (time_hours <= time_end)
+
+    time_hours_filtered = time_hours[mask]
+    time_hours_shifted = time_hours_filtered - time_start  # Shift to 0-6 hours
+
     # Calculate normalized pressures
     p1_norm = (pMax - data['loo1_pExp']) / (pMax - pMin)
     p2_norm = (pMax - data['loo2_pExp']) / (pMax - pMin)
@@ -392,22 +419,32 @@ def postprocess():
     y1_norm = data['yPum_y1'] / m_flow_nominal
 
     # Plot normalized flow rate (faint gray, 1pt)
-    ax.plot(time_hours, y1_norm, color='lightgray', linewidth=1)
+    ax.plot(time_hours_shifted, y1_norm[mask], color='lightgray', linewidth=1)
 
     # Plot normalized pressures (black, 2pt)
-    ax.plot(time_hours, p1_norm, 'k-', linewidth=2)
-    ax.plot(time_hours, p2_norm, 'k-', linewidth=2)
-    ax.plot(time_hours, p3_norm, 'k-', linewidth=2)
+    ax.plot(time_hours_shifted, p1_norm[mask], 'k-', linewidth=2)
+    ax.plot(time_hours_shifted, p2_norm[mask], 'k-', linewidth=2)
+    ax.plot(time_hours_shifted, p3_norm[mask], 'k-', linewidth=2)
 
-    # Add labels at t=6000s (1.67 hours) - skip if title contains "ideal"
+    # Add labels at t=6000s relative to window start
     if 'ideal' not in data['label'].lower():
-        t_label_hours = 6000 / 3600.0
-        idx_label = min(range(len(time_hours)), key=lambda i: abs(time_hours[i] - t_label_hours))
-        # Position labels above the line with ~1em spacing (0.05 in normalized units)
-        label_offset = 0.05
-        ax.text(t_label_hours, p1_norm[idx_label] + label_offset, '1', fontsize=15, ha='left', va='bottom')
-        ax.text(t_label_hours, p2_norm[idx_label] + label_offset, '2', fontsize=15, ha='left', va='bottom')
-        ax.text(t_label_hours, p3_norm[idx_label] + label_offset, '3', fontsize=15, ha='left', va='bottom')
+        # Original t_label was 6000s = 1.67h from simulation start
+        t_label_seconds = 6000
+        t_label_hours_abs = t_label_seconds / 3600.0
+
+        # Only add labels if this time falls within our window
+        if time_start <= t_label_hours_abs <= time_end:
+            t_label_shifted = t_label_hours_abs - time_start
+            idx_label = min(range(len(time_hours_shifted)),
+                          key=lambda j: abs(time_hours_shifted[j] - t_label_shifted))
+            # Position labels above the line with ~1em spacing (0.05 in normalized units)
+            label_offset = 0.05
+            ax.text(t_label_shifted, p1_norm[mask][idx_label] + label_offset, '1',
+                   fontsize=15, ha='left', va='bottom')
+            ax.text(t_label_shifted, p2_norm[mask][idx_label] + label_offset, '2',
+                   fontsize=15, ha='left', va='bottom')
+            ax.text(t_label_shifted, p3_norm[mask][idx_label] + label_offset, '3',
+                   fontsize=15, ha='left', va='bottom')
 
     # Tufte-style formatting
     ax.set_title(data['label'], fontsize=15)
