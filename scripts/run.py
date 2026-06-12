@@ -298,7 +298,7 @@ def postprocess():
     # Calculate pMin and pMax from first 6 cases
     print("\nCalculating pressure bounds from first 6 cases...")
     all_pressures = []
-    for i in range(6):
+    for i in range(3):
         all_pressures.extend(results[i]['loo1_pExp'])
         all_pressures.extend(results[i]['loo2_pExp'])
         all_pressures.extend(results[i]['loo3_pExp'])
@@ -313,10 +313,10 @@ def postprocess():
 
     # Plot 1: 3x2 grid with all 6 cases (first 6 only)
     print("  Creating 3x2 grid plot...")
-    fig1, axes = plt.subplots(2, 3, figsize=(15, 10))
+    fig1, axes = plt.subplots(3, 1, figsize=(15, 30))
     axes = axes.flatten()
 
-    for i in range(6):
+    for i in range(3):
         ax = axes[i]
         data = results[i]
         time_hours = data['time'] / 3600.0  # Convert to hours
@@ -380,7 +380,7 @@ def postprocess():
     print("  Creating single plot for case 7...")
     fig2, ax = plt.subplots(figsize=(10, 6))
 
-    data = results[6]  # Case 7 (index 6)
+    data = results[3]  # single plot
     time_hours = data['time'] / 3600.0  # Convert to hours
 
     # Calculate normalized pressures

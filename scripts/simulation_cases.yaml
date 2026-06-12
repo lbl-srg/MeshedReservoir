@@ -1,7 +1,7 @@
 simulation_settings:
   model_name: MeshedReservoir.Examples.ThreeLoops
   startTime: 0
-  stopTime: 10800
+  stopTime: 21600
   solver: Radau
   tolerance: 1.0e-6
 
