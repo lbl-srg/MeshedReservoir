@@ -313,7 +313,7 @@ def postprocess():
 
     # Plot 1: 3x2 grid with all 6 cases (first 6 only)
     print("  Creating 3x2 grid plot...")
-    fig1, axes = plt.subplots(3, 1, figsize=(15, 30))
+    fig1, axes = plt.subplots(3, 1, figsize=(7, 10))
     axes = axes.flatten()
 
     for i in range(3):
