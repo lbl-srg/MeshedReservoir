@@ -4,7 +4,7 @@ model ThreeLoops "Three reservoir loops connected"
 
   replaceable package Medium = Buildings.Media.Specialized.Water.TemperatureDependentDensity
     "Medium model for water";
-  parameter Boolean use_wasteHeat = true
+  parameter Boolean use_wasteHeat = false
     "Set to true to enable use of waste heat";
 
   parameter Integer conInd = 2

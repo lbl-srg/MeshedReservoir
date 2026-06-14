@@ -10,6 +10,7 @@ cases:
   - label: "high pressure"
     parameters:
       conInd: 1  # highPressure
+      use_wasteHeat: false
       loo1:
         addHeat: false
       loo2:
