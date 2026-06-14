@@ -1,6 +1,5 @@
 ConditionalPump
 ControlledExpansionVessel
-PumpController
 ExpansionVessel
 LevelController
 Validation

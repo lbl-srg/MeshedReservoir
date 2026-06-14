@@ -21,6 +21,7 @@ cases:
   - label: "ideal pressure"
     parameters:
       conInd: 2  # idealPressure
+      use_wasteHeat: false
       loo1:
         addHeat: false
       loo2:
@@ -28,10 +29,12 @@ cases:
       loo3:
         addHeat: false
 
+
   # Case 3: low pressure
   - label: "low pressure"
     parameters:
       conInd: 3  # lowPressure
+      use_wasteHeat: false
       loo1:
         addHeat: false
       loo2:
@@ -43,9 +46,22 @@ cases:
   - label: "ideal, on, with heat"
     parameters:
       conInd: 2  # idealPressure
+      use_wasteHeat: false
       loo1:
         addHeat: false
       loo2:
         addHeat: true
+      loo3:
+        addHeat: false
+
+  # Case 5: ideal, on, with heat settings
+  - label: "ideal, with interloop heat transfer"
+    parameters:
+      conInd: 2  # idealPressure
+      use_wasteHeat: true
+      loo1:
+        addHeat: false
+      loo2:
+        addHeat: false
       loo3:
         addHeat: false
