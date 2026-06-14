@@ -211,11 +211,11 @@ model SingleLoop "Single loop with expansion vessel"
     "If 1, add heat to the loop, if -1, remove heat from the loop" annotation (
       Placement(transformation(extent={{-220,-80},{-180,-40}}),
         iconTransformation(extent={{-220,-80},{-180,-40}})));
-  Modelica.Thermal.HeatTransfer.Sources.PrescribedHeatFlow wasHeaSou if addHeat
+  Modelica.Thermal.HeatTransfer.Sources.PrescribedHeatFlow wasHeaSou
     "Waste heat source"
     annotation (Placement(transformation(extent={{62,-30},{82,-10}})));
   Buildings.Controls.OBC.CDL.Reals.MultiplyByParameter gaiWasHea(k=
-        QWasHea_nominal) if addHeat "Gain for waste heat flow rate"
+        QWasHea_nominal) "Gain for waste heat flow rate"
     annotation (Placement(transformation(extent={{30,-30},{50,-10}})));
 
   Buildings.Controls.OBC.CDL.Conversions.IntegerToReal intToRea
