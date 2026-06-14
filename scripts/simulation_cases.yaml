@@ -4,6 +4,7 @@ simulation_settings:
   stopTime: 216000
   solver: Radau
   tolerance: 1.0e-6
+  numberOfIntervals: 5000
 
 cases:
   # Case 1: high pressure

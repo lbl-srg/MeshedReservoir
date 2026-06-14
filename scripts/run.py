@@ -114,11 +114,13 @@ def simulate_case(args):
         s.setStopTime(settings['stopTime'])
         s.setSolver(settings['solver'])
         s.setTolerance(settings['tolerance'])
+        s.setNumberOfIntervals(settings['numberOfIntervals'])
         s.setResultFile(f"{case_name}")
 
-        # Set configuration index (1: highPressure, 2: idealPressure, 3: lowPressure)
-        conInd = case_data['parameters']['conInd']
-        s.addParameters({'conInd': conInd})
+        # Set all top-level scalar parameters (those whose value is not a sub-dict)
+        for param_name, param_value in case_data['parameters'].items():
+            if not isinstance(param_value, dict):
+                s.addParameters({param_name: param_value})
 
         # Set parameters for each loop
         for loop_name in ['loo1', 'loo2', 'loo3']:
@@ -227,6 +229,7 @@ def postprocess():
     Post-process simulation results and create plots.
     """
     import matplotlib.pyplot as plt
+    import numpy as np
 
     print(f"\n{'='*60}")
     print(f"POST-PROCESSING")
@@ -284,6 +287,22 @@ def postprocess():
             'pSysMax': r.values("pSysMax.y")[1],
             'pSysMin': r.values("pSysMin.y")[1],
         }
+
+        # Read interloop heat transfer variables; interpolate onto common time grid
+        common_time = data['time']
+        try:
+            t, v = r.values("loo1.ySetWasHea")
+            data['loo1.ySetWasHea'] = np.interp(common_time, t, v)
+            t, v = r.values("loo2.ySetWasHea")
+            data['loo2.ySetWasHea'] = np.interp(common_time, t, v)
+            t, v = r.values("loo1.vol.T")
+            data['loo1.vol.T'] = np.interp(common_time, t, v)
+            t, v = r.values("loo2.vol.T")
+            data['loo2.vol.T'] = np.interp(common_time, t, v)
+            t, v = r.values("loo3.vol.T")
+            data['loo3.vol.T'] = np.interp(common_time, t, v)
+        except Exception:
+            pass
 
         # Get m_flow_nominal from first case
         if i == 0:
@@ -504,6 +523,87 @@ def postprocess():
     print(f"    Saved: {plot2_pdf.name}")
     print(f"    Saved: {plot2_png.name}")
     plt.close(fig2)
+
+    # Plot 3: Interloop heat transfer for the last case (case index 4)
+    print("  Creating interloop heat transfer plot for last case...")
+    last_data = results[4]
+    time_hours = last_data['time'] / 3600.0  # Convert to hours
+
+    # Filter data to show only 54-60 hours
+    time_start = 54.0
+    time_end = 60.0
+    mask = (time_hours >= time_start) & (time_hours <= time_end)
+
+    time_hours_filtered = time_hours[mask]
+    time_hours_shifted = time_hours_filtered - time_start  # Shift to 0-6 hours
+
+    fig3, axes3 = plt.subplots(2, 1, figsize=(7, 7))
+
+    # ── Subplot 1: waste heat control signals ──────────────────────────────
+    ax3a = axes3[0]
+    loo1_wasHea = last_data['loo1.ySetWasHea'][mask]
+    loo2_wasHea = last_data['loo2.ySetWasHea'][mask]
+    ax3a.plot(time_hours_shifted, loo1_wasHea, 'k', linewidth=1.5)
+    ax3a.plot(time_hours_shifted, loo2_wasHea, 'k', linewidth=1.5)
+
+    # Labels as text above the data line at t=55.5 h absolute → 1.5 h shifted
+    t_lab1 = 55.5 - time_start
+    idx_lab1 = min(range(len(time_hours_shifted)),
+                   key=lambda j: abs(time_hours_shifted[j] - t_lab1))
+    ax3a.text(t_lab1, loo1_wasHea[idx_lab1],
+              'Waste heat into loop 1 and 2', fontsize=11,
+              ha='left', va='bottom')
+    ax3a.text(t_lab1, loo2_wasHea[idx_lab1],
+              'Waste heat out of loop 2', fontsize=11,
+              ha='left', va='bottom')
+
+    ax3a.set_ylabel('Waste heat control signal [1]', fontsize=12)
+    ax3a.set_xlabel('Time [h]', fontsize=12)
+    ax3a.tick_params(labelsize=11)
+    ax3a.spines['top'].set_visible(False)
+    ax3a.spines['right'].set_visible(False)
+    ax3a.grid(True, alpha=0.2, linewidth=0.5, linestyle='-', color='gray')
+    ax3a.set_axisbelow(True)
+
+    # ── Subplot 2: loop temperatures ───────────────────────────────────────
+    ax3b = axes3[1]
+    # Convert K → °C
+    T1_C = last_data['loo1.vol.T'][mask] - 273.15
+    T2_C = last_data['loo2.vol.T'][mask] - 273.15
+    T3_C = last_data['loo3.vol.T'][mask] - 273.15
+    ax3b.plot(time_hours_shifted, T1_C, 'k', linewidth=1.5)
+    ax3b.plot(time_hours_shifted, T2_C, 'k', linewidth=1.5)
+    ax3b.plot(time_hours_shifted, T3_C, 'k', linewidth=1.5)
+
+    # Labels as text above the data line at t=56.5 h absolute → 2.5 h shifted
+    t_lab2 = 56.5 - time_start
+    idx_lab2 = min(range(len(time_hours_shifted)),
+                   key=lambda j: abs(time_hours_shifted[j] - t_lab2))
+    ax3b.text(t_lab2, T1_C[idx_lab2], 'Loop 1', fontsize=11,
+              ha='left', va='bottom')
+    ax3b.text(t_lab2, T2_C[idx_lab2], 'Loop 2', fontsize=11,
+              ha='left', va='bottom')
+    ax3b.text(t_lab2, T3_C[idx_lab2], 'Loop 3', fontsize=11,
+              ha='left', va='bottom')
+
+    ax3b.set_ylabel(r'Loop temperatures [$^\circ \mathrm{C}$]', fontsize=12)
+    ax3b.set_xlabel('Time [h]', fontsize=12)
+    ax3b.tick_params(labelsize=11)
+    ax3b.spines['top'].set_visible(False)
+    ax3b.spines['right'].set_visible(False)
+    ax3b.grid(True, alpha=0.2, linewidth=0.5, linestyle='-', color='gray')
+    ax3b.set_axisbelow(True)
+
+    plt.tight_layout()
+
+    # Save plot 3
+    plot3_pdf = OUT_DIR / "interloopHeatTransfer.pdf"
+    plot3_png = OUT_DIR / "interloopHeatTransfer.png"
+    fig3.savefig(plot3_pdf, dpi=300, bbox_inches='tight')
+    fig3.savefig(plot3_png, dpi=300, bbox_inches='tight')
+    print(f"    Saved: {plot3_pdf.name}")
+    print(f"    Saved: {plot3_png.name}")
+    plt.close(fig3)
 
     print("\n" + "="*60)
     print("POST-PROCESSING COMPLETED SUCCESSFULLY")
