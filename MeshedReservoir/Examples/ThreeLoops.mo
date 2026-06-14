@@ -150,7 +150,7 @@ model ThreeLoops "Three reservoir loops connected"
     dpJun_nominal=dpJun_nominal) "Connection between loop 2 and 4"
     annotation (Placement(transformation(extent={{-16,32},{4,52}})));
   Buildings.Controls.OBC.CDL.Integers.Sources.TimeTable schWasUse(
-    table=[0,0; 55,1; 59,0],
+    table=[0,0; 55,-1; 59,0],
     timeScale=3600,
     period=60*24*3600) "Schedule for waste heat use"
     annotation (Placement(transformation(extent={{-160,60},{-140,80}})));
