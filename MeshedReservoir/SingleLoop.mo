@@ -272,9 +272,9 @@ equation
           136},{118,136}}, color={0,0,127}));
   connect(pumDow.pOut, max1.u2) annotation (Line(points={{121,46},{128,46},{128,
           60},{104,60},{104,124},{118,124}}, color={0,0,127}));
-  annotation (Icon(coordinateSystem(preserveAspectRatio=false, extent={{-180,
-            -100},{180,120}}),
-                         graphics={
+  annotation (
+    Icon(coordinateSystem(preserveAspectRatio=false, extent={{-180,-100}, {180,120}}),
+      graphics={
         Rectangle(
           extent={{-180,120},{180,-100}},
           lineColor={0,0,0},
@@ -312,6 +312,5 @@ equation
           points={{-20,-60},{-20,-100}},
           color={0,0,0},
           thickness=0.5)}),                                      Diagram(
-        coordinateSystem(preserveAspectRatio=false, extent={{-180,-100},{180,
-            120}})));
+        coordinateSystem(preserveAspectRatio=false, extent={{-180,-100},{180,180}})));
 end SingleLoop;
