@@ -180,6 +180,12 @@ model SingleLoop "Single loop with expansion vessel"
     "Time schedule for pump operation"
     annotation (Placement(transformation(extent={{-100,70},{-80,90}})));
 
+  Buildings.Controls.OBC.CDL.Interfaces.RealOutput TLoo(
+    final unit="K",
+    final displayUnit="degC")
+    "Loop temperature"
+    annotation (Placement(transformation(extent={{180,20},{200,40}})));
+
   Modelica.Blocks.Interfaces.RealOutput pExp "Air pressure in vessel"
     annotation (Placement(transformation(extent={{180,-50},{200,-30}})));
   Modelica.Thermal.HeatTransfer.Sources.PrescribedHeatFlow
