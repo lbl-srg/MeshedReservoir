@@ -2,7 +2,7 @@ within MeshedReservoir.Examples;
 model ThreeLoops "Three reservoir loops connected"
   extends Modelica.Icons.Example;
 
-  parameter Integer conInd = 1
+  parameter Integer conInd = 2
     "Index for configuration (1: highPressure, 2: idealPressure, 3: lowPressure)";
 
   parameter Modelica.Units.SI.AbsolutePressure pMax=18E5
@@ -98,32 +98,56 @@ model ThreeLoops "Three reservoir loops connected"
 
   Buildings.Controls.OBC.CDL.Reals.MultiSum mTotOth(nin=3)
     "Total mass of all expansion vessels"
-    annotation (Placement(transformation(extent={{40,-60},{60,-40}})));
+    annotation (Placement(transformation(extent={{60,-60},{80,-40}})));
+  Buildings.Controls.OBC.CDL.Reals.MultiMax pSysMax(nin=3)
+    "Maximum pressure in the system"
+    annotation (Placement(transformation(extent={{60,0},{80,20}})));
+  Buildings.Controls.OBC.CDL.Reals.MultiMin pSysMin(nin=3)
+    "Minimum pressure in the system"
+    annotation (Placement(transformation(extent={{60,30},{80,50}})));
 equation
   connect(loo2.port_4, loo1.port_1)
-    annotation (Line(points={{-10,-20},{-10,-38}}, color={0,127,255}));
+    annotation (Line(points={{-10,-20},{-10,-28},{-10,-38},{-10,-38}},
+                                                   color={0,127,255}));
   connect(loo2.port_3, loo1.port_2)
-    annotation (Line(points={{-6,-20},{-6,-38}},   color={0,127,255}));
+    annotation (Line(points={{-6,-20},{-6,-28},{-6,-38},{-6,-38}},
+                                                   color={0,127,255}));
   connect(loo3.port_4, loo2.port_1)
-    annotation (Line(points={{-10,20},{-10,2}}, color={0,127,255}));
+    annotation (Line(points={{-10,20},{-10,12},{-10,2},{-10,2}},
+                                                color={0,127,255}));
   connect(loo3.port_3, loo2.port_2)
-    annotation (Line(points={{-6,20},{-6,2}},   color={0,127,255}));
+    annotation (Line(points={{-6,20},{-6,12},{-6,2},{-6,2}},
+                                                color={0,127,255}));
   connect(loo1.m, mTotOth.u[1]) annotation (Line(points={{11,-44},{28,-44},{28,
-          -50.6667},{38,-50.6667}},
+          -50.6667},{58,-50.6667}},
                           color={0,0,127}));
-  connect(loo2.m, mTotOth.u[2]) annotation (Line(points={{11,-4},{28,-4},{28,-42},
-          {30,-42},{30,-50},{38,-50}}, color={0,0,127}));
+  connect(loo2.m, mTotOth.u[2]) annotation (Line(points={{11,-4},{28,-4},{28,
+          -42},{30,-42},{30,-50},{58,-50}},
+                                       color={0,0,127}));
   connect(loo3.m, mTotOth.u[3]) annotation (Line(points={{11,36},{28,36},{28,
-          -49.3333},{38,-49.3333}},
+          -49.3333},{58,-49.3333}},
                           color={0,0,127}));
-  connect(mTotOth.y, loo3.mAll) annotation (Line(points={{62,-50},{70,-50},{70,
+  connect(mTotOth.y, loo3.mAll) annotation (Line(points={{82,-50},{90,-50},{90,
           -80},{-50,-80},{-50,30},{-28,30}},
                                         color={0,0,127}));
-  connect(mTotOth.y, loo2.mAll) annotation (Line(points={{62,-50},{70,-50},{70,-80},
-          {-50,-80},{-50,-10},{-28,-10}}, color={0,0,127}));
-  connect(mTotOth.y, loo1.mAll) annotation (Line(points={{62,-50},{70,-50},{70,
+  connect(mTotOth.y, loo2.mAll) annotation (Line(points={{82,-50},{90,-50},{90,
+          -80},{-50,-80},{-50,-10},{-28,-10}},
+                                          color={0,0,127}));
+  connect(mTotOth.y, loo1.mAll) annotation (Line(points={{82,-50},{90,-50},{90,
           -80},{-50,-80},{-50,-50},{-28,-50}},
                                           color={0,0,127}));
+  connect(loo3.pIn, pSysMin.u[1]) annotation (Line(points={{11,41},{50,41},{50,
+          39.3333},{58,39.3333}},    color={0,0,127}));
+  connect(loo2.pIn, pSysMin.u[2]) annotation (Line(points={{11,1},{40,1},{40,40},
+          {58,40}},        color={0,0,127}));
+  connect(loo1.pIn, pSysMin.u[3]) annotation (Line(points={{11,-39},{42,-39},{
+          42,40.6667},{58,40.6667}},  color={0,0,127}));
+  connect(loo3.pOut, pSysMax.u[1]) annotation (Line(points={{11,39},{46,39},{46,
+          9.33333},{58,9.33333}},     color={0,0,127}));
+  connect(loo2.pOut, pSysMax.u[2]) annotation (Line(points={{11,-1},{46,-1},{46,
+          10},{58,10}},     color={0,0,127}));
+  connect(loo1.pOut, pSysMax.u[3]) annotation (Line(points={{11,-41},{48,-41},{
+          48,10.6667},{58,10.6667}},  color={0,0,127}));
   annotation (experiment(
       StopTime=216000,
       Tolerance=1e-06,

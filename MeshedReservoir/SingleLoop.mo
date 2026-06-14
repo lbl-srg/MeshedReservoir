@@ -82,11 +82,13 @@ model SingleLoop "Single loop with expansion vessel"
   Modelica.Fluid.Interfaces.FluidPort_a port_1(
     redeclare package Medium = Medium)
     "Fluid port"
-    annotation (Placement(transformation(extent={{-30,110},{-10,130}})));
+    annotation (Placement(transformation(extent={{-30,170},{-10,190}}),
+        iconTransformation(extent={{-30,110},{-10,130}})));
   Modelica.Fluid.Interfaces.FluidPort_a port_2(
     redeclare package Medium = Medium)
     "Fluid port"
-    annotation (Placement(transformation(extent={{10,110},{30,130}})));
+    annotation (Placement(transformation(extent={{10,170},{30,190}}),
+        iconTransformation(extent={{10,110},{30,130}})));
   Modelica.Fluid.Interfaces.FluidPort_a port_3(
     redeclare package Medium = Medium)
     "Fluid port"
@@ -135,11 +137,11 @@ model SingleLoop "Single loop with expansion vessel"
   ExpansionVessel expUp
     if not (configuration == MeshedReservoir.Configuration.lowPressure)
     "Expansion vessel upstream"
-    annotation (Placement(transformation(extent={{-130,50},{-110,70}})));
+    annotation (Placement(transformation(extent={{-130,58},{-110,78}})));
   ExpansionVessel expDow
     if configuration == MeshedReservoir.Configuration.lowPressure
     "Expansion vessel downstream"
-    annotation (Placement(transformation(extent={{130,50},{150,70}})));
+    annotation (Placement(transformation(extent={{130,58},{150,78}})));
 
   Junction jun11
     "Junction"
@@ -197,17 +199,22 @@ model SingleLoop "Single loop with expansion vessel"
     if addHeat
     "Gain for heat flow rate"
     annotation (Placement(transformation(extent={{28,4},{48,24}})));
+  Buildings.Controls.OBC.CDL.Reals.Max max1
+    annotation (Placement(transformation(extent={{120,120},{140,140}})));
+  Buildings.Controls.OBC.CDL.Reals.Min min1
+    annotation (Placement(transformation(extent={{120,150},{140,170}})));
 equation
   connect(jun11.port_2, jun12.port_1)
     annotation (Line(points={{-10,40},{10,40}}, color={0,127,255}));
   connect(jun12.port_2, pumDow.port_a)
     annotation (Line(points={{30,40},{100,40}}, color={0,127,255}));
-  connect(pumUp.port_a, expUp.portWat) annotation (Line(points={{-60,40},{-120,40},
-          {-120,50}}, color={0,127,255}));
+  connect(pumUp.port_a, expUp.portWat) annotation (Line(points={{-60,40},{-120,
+          40},{-120,58}},
+                      color={0,127,255}));
   connect(jun13.port_2, jun14.port_1)
     annotation (Line(points={{10,-40},{-10,-40}},  color={0,127,255}));
   connect(pumDow.port_b, expDow.portWat)
-    annotation (Line(points={{120,40},{140,40},{140,50}}, color={0,127,255}));
+    annotation (Line(points={{120,40},{140,40},{140,58}}, color={0,127,255}));
   connect(yPum.y[1], pumUp.mSet_flow) annotation (Line(points={{-78,80},{-70,80},
           {-70,48},{-62,48}}, color={0,0,127}));
   connect(yPum.y[1], pumDow.mSet_flow) annotation (Line(points={{-78,80},{90,80},
@@ -215,27 +222,28 @@ equation
   connect(pumUp.port_b, jun11.port_1)
     annotation (Line(points={{-40,40},{-30,40}}, color={0,127,255}));
   connect(jun11.port_3, port_1)
-    annotation (Line(points={{-20,50},{-20,120}}, color={0,127,255}));
+    annotation (Line(points={{-20,50},{-20,180}}, color={0,127,255}));
   connect(jun12.port_3, port_2)
-    annotation (Line(points={{20,50},{20,120}}, color={0,127,255}));
+    annotation (Line(points={{20,50},{20,180}}, color={0,127,255}));
   connect(jun13.port_3, port_3)
     annotation (Line(points={{20,-50},{20,-100}},   color={0,127,255}));
   connect(jun14.port_3, port_4)
     annotation (Line(points={{-20,-50},{-20,-100}}, color={0,127,255}));
-  connect(expDow.m, m) annotation (Line(points={{151,51},{170,51},{170,60},{190,
+  connect(expDow.m, m) annotation (Line(points={{151,59},{170,59},{170,60},{190,
           60}}, color={0,0,127}));
-  connect(expUp.m, m) annotation (Line(points={{-109,51},{-102,51},{-102,102},{
+  connect(expUp.m, m) annotation (Line(points={{-109,59},{-102,59},{-102,102},{
           170,102},{170,60},{190,60}},
                                    color={0,0,127}));
-  connect(expUp.mAll, mAll) annotation (Line(points={{-132,60},{-150,60},{-150,0},
-          {-200,0}}, color={0,0,127}));
+  connect(expUp.mAll, mAll) annotation (Line(points={{-132,68},{-150,68},{-150,
+          0},{-200,0}},
+                     color={0,0,127}));
   connect(mAll, expDow.mAll) annotation (Line(points={{-200,0},{-150,0},{-150,
-          96},{120,96},{120,60},{128,60}},
+          96},{120,96},{120,68},{128,68}},
                                         color={0,0,127}));
-  connect(expDow.p, pExp) annotation (Line(points={{151,66},{160,66},{160,-40},
+  connect(expDow.p, pExp) annotation (Line(points={{151,74},{160,74},{160,-40},
           {190,-40}}, color={0,0,127}));
   connect(pExp, expUp.p) annotation (Line(points={{190,-40},{160,-40},{160,108},
-          {-106,108},{-106,66},{-109,66}}, color={0,0,127}));
+          {-106,108},{-106,74},{-109,74}}, color={0,0,127}));
   connect(heaSou.port, vol.heatPort) annotation (Line(points={{80,14},{130,14},{
           130,10}},  color={191,0,0}));
   connect(jun14.port_2, res2.port_a)
@@ -252,16 +260,21 @@ equation
     annotation (Line(points={{60,14},{50,14}}, color={0,0,127}));
   connect(yHea.y[1], gai.u)
     annotation (Line(points={{22,14},{26,14}}, color={0,0,127}));
-  connect(pumUp.pIn, pIn) annotation (Line(points={{-39,48},{-30,48},{-30,110},
-          {190,110}}, color={0,0,127}));
-  connect(pumUp.pOut, pOut) annotation (Line(points={{-39,46},{-28,46},{-28,90},
-          {190,90}}, color={0,0,127}));
-  connect(pumDow.pIn, pIn) annotation (Line(points={{121,48},{124,48},{124,110},
-          {190,110}}, color={0,0,127}));
-  connect(pumDow.pOut, pOut) annotation (Line(points={{121,46},{126,46},{126,90},
-          {190,90}}, color={0,0,127}));
-  annotation (Icon(coordinateSystem(preserveAspectRatio=false, extent={{-180,-100},
-            {180,120}}), graphics={
+  connect(min1.y, pIn) annotation (Line(points={{142,160},{174,160},{174,110},{
+          190,110}}, color={0,0,127}));
+  connect(max1.y, pOut) annotation (Line(points={{142,130},{172,130},{172,90},{
+          190,90}}, color={0,0,127}));
+  connect(pumUp.pIn, min1.u1) annotation (Line(points={{-39,48},{-30,48},{-30,
+          166},{118,166}}, color={0,0,127}));
+  connect(pumDow.pIn, min1.u2) annotation (Line(points={{121,48},{126,48},{126,
+          58},{102,58},{102,154},{118,154}}, color={0,0,127}));
+  connect(pumUp.pOut, max1.u1) annotation (Line(points={{-39,46},{-28,46},{-28,
+          136},{118,136}}, color={0,0,127}));
+  connect(pumDow.pOut, max1.u2) annotation (Line(points={{121,46},{128,46},{128,
+          60},{104,60},{104,124},{118,124}}, color={0,0,127}));
+  annotation (Icon(coordinateSystem(preserveAspectRatio=false, extent={{-180,
+            -100},{180,120}}),
+                         graphics={
         Rectangle(
           extent={{-180,120},{180,-100}},
           lineColor={0,0,0},
@@ -299,5 +312,6 @@ equation
           points={{-20,-60},{-20,-100}},
           color={0,0,0},
           thickness=0.5)}),                                      Diagram(
-        coordinateSystem(preserveAspectRatio=false, extent={{-180,-100},{180,120}})));
+        coordinateSystem(preserveAspectRatio=false, extent={{-180,-100},{180,
+            120}})));
 end SingleLoop;

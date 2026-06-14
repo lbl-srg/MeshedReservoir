@@ -281,6 +281,8 @@ def postprocess():
             'yPum_y1': r.values("loo1.yPum.y[1]")[1],
             'yPum_y2': r.values("loo2.yPum.y[1]")[1],
             'yPum_y3': r.values("loo3.yPum.y[1]")[1],
+            'pSysMax': r.values("pSysMax.y")[1],
+            'pSysMin': r.values("pSysMin.y")[1],
         }
 
         # Get m_flow_nominal from first case
@@ -336,10 +338,18 @@ def postprocess():
         p2_bar = data['loo2_pExp'] / 100000.0
         p3_bar = data['loo3_pExp'] / 100000.0
 
+        # Convert system pressure range to bar
+        pSysMax_bar = data['pSysMax'] / 100000.0
+        pSysMin_bar = data['pSysMin'] / 100000.0
+
         # Calculate normalized flow rates
         y1_norm = data['yPum_y1'] / m_flow_nominal
         y2_norm = data['yPum_y2'] / m_flow_nominal
         y3_norm = data['yPum_y3'] / m_flow_nominal
+
+        # Plot pressure range polygon in background (light grey)
+        ax.fill_between(time_hours_shifted, pSysMin_bar[mask], pSysMax_bar[mask],
+                        color='lightgreen', alpha=0.3, zorder=0)
 
         # Plot pressures on primary y-axis (black, 2pt)
         ax.plot(time_hours_shifted, p1_bar[mask], 'k-', linewidth=2)
