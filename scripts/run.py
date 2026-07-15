@@ -413,8 +413,8 @@ def postprocess():
 
         # Add loop labels for first and third subfigures (i=0 and i=2), similar to fig3
         if i in [0, 2]:
-            # Position labels at t=55.0h absolute → 1.0h shifted
-            t_lab = 55.0 - time_start
+            # Position labels at t=56.5h absolute → 2.5h shifted (same as fig3)
+            t_lab = 56.5 - time_start
             idx_lab = min(range(len(time_hours_shifted)),
                          key=lambda j: abs(time_hours_shifted[j] - t_lab))
             ax.text(t_lab, p1_bar[mask][idx_lab], 'Loop 1', fontsize=11,

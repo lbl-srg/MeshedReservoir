@@ -7,13 +7,13 @@ model SingleLoop "Single loop with expansion vessel"
 
   parameter Modelica.Units.SI.AbsolutePressure pMax=1600000
     "Maximum pressure, above which the simulation stops with an assertion"
-    annotation(Dialog(group="Static pressures"));
+    annotation (Dialog(group="Static pressures"));
   parameter Modelica.Units.SI.AbsolutePressure pMin=120000
     "Minimum pressure, below which the simulation stops with an assertion"
-    annotation(Dialog(group="Static pressures"));
+    annotation (Dialog(group="Static pressures"));
   parameter Modelica.Units.SI.AbsolutePressure p_start=600000
     "Start value of pressure"
-    annotation(Dialog(group="Static pressures"));
+    annotation (Dialog(group="Static pressures"));
 
   parameter Modelica.Units.SI.MassFlowRate m_flow_nominal = 685
     "Design mass flow rate";
@@ -72,37 +72,37 @@ model SingleLoop "Single loop with expansion vessel"
   Modelica.Blocks.Interfaces.RealOutput pOut(
     final unit="Pa")
     "Outlet pressure"
-    annotation (Placement(transformation(extent={{180,80},{200,100}})));
+    annotation(Placement(transformation(extent={{180,80},{200,100}})));
   Modelica.Blocks.Interfaces.RealOutput pIn(
     final unit="Pa")
     "Inlet pressure"
-    annotation (Placement(transformation(extent={{180,100},{200,120}})));
+    annotation(Placement(transformation(extent={{180,100},{200,120}})));
 
   Buildings.Controls.OBC.CDL.Interfaces.RealInput mAll
     "Total mass of all expansion vessels in the system"
-    annotation (Placement(transformation(extent={{-220,-20},{-180,20}})));
+    annotation(Placement(transformation(extent={{-220,-20},{-180,20}})));
   Modelica.Blocks.Interfaces.RealOutput m
     "Mass of expansion vessel"
-    annotation (Placement(transformation(extent={{180,50},{200,70}})));
+    annotation(Placement(transformation(extent={{180,50},{200,70}})));
 
   Modelica.Fluid.Interfaces.FluidPort_a port_1(
     redeclare package Medium = Medium)
     "Fluid port"
-    annotation (Placement(transformation(extent={{-30,170},{-10,190}}),
-        iconTransformation(extent={{-30,110},{-10,130}})));
+    annotation(Placement(transformation(extent={{-30,170},{-10,190}}),
+      iconTransformation(extent={{-30,110},{-10,130}})));
   Modelica.Fluid.Interfaces.FluidPort_a port_2(
     redeclare package Medium = Medium)
     "Fluid port"
-    annotation (Placement(transformation(extent={{10,170},{30,190}}),
-        iconTransformation(extent={{10,110},{30,130}})));
+    annotation(Placement(transformation(extent={{10,170},{30,190}}),
+      iconTransformation(extent={{10,110},{30,130}})));
   Modelica.Fluid.Interfaces.FluidPort_a port_3(
     redeclare package Medium = Medium)
     "Fluid port"
-    annotation (Placement(transformation(extent={{10,-110},{30,-90}})));
+    annotation(Placement(transformation(extent={{10,-110},{30,-90}})));
   Modelica.Fluid.Interfaces.FluidPort_a port_4(
     redeclare package Medium = Medium)
     "Fluid port"
-    annotation (Placement(transformation(extent={{-30,-110},{-10,-90}})));
+    annotation(Placement(transformation(extent={{-30,-110},{-10,-90}})));
 
   model Junction = Buildings.Fluid.FixedResistances.Junction(
     redeclare final package Medium=Medium,
@@ -134,89 +134,87 @@ model SingleLoop "Single loop with expansion vessel"
   ConditionalPump pumUp(
     have_pump=(configuration == MeshedReservoir.Configuration.highPressure))
     "Upstream pump"
-    annotation (Placement(transformation(extent={{-60,30},{-40,50}})));
+    annotation(Placement(transformation(extent={{-60,30},{-40,50}})));
   ConditionalPump pumDow(
     have_pump=not (configuration == MeshedReservoir.Configuration.highPressure))
     "Downstream pump"
-    annotation (Placement(transformation(extent={{100,30},{120,50}})));
+    annotation(Placement(transformation(extent={{100,30},{120,50}})));
 
   ExpansionVessel expUp
     if not (configuration == MeshedReservoir.Configuration.lowPressure)
     "Expansion vessel upstream"
-    annotation (Placement(transformation(extent={{-130,58},{-110,78}})));
+    annotation(Placement(transformation(extent={{-130,58},{-110,78}})));
   ExpansionVessel expDow
     if configuration == MeshedReservoir.Configuration.lowPressure
     "Expansion vessel downstream"
-    annotation (Placement(transformation(extent={{130,58},{150,78}})));
+    annotation(Placement(transformation(extent={{130,58},{150,78}})));
 
   Junction jun11
     "Junction"
-    annotation (Placement(transformation(extent={{-30,50},{-10,30}})));
+    annotation(Placement(transformation(extent={{-30,50},{-10,30}})));
   Junction jun12
     "Junction"
-    annotation (Placement(transformation(extent={{10,50},{30,30}})));
+    annotation(Placement(transformation(extent={{10,50},{30,30}})));
   Junction jun13
     "Junction"
-    annotation (Placement(transformation(extent={{30,-70},{10,-50}})));
+    annotation(Placement(transformation(extent={{30,-70},{10,-50}})));
   Junction jun14
     "Junction"
-    annotation (Placement(transformation(extent={{-10,-70},{-30,-50}})));
+    annotation(Placement(transformation(extent={{-10,-70},{-30,-50}})));
 
   Volume vol(nPorts=2)
     "Fluid volume"
-    annotation (Placement(transformation(extent={{-10,10},{10,-10}},
-        rotation=270,
-        origin={130,0})));
+    annotation(Placement(transformation(extent={{-10,10},{10,-10}},
+      rotation=270,
+      origin={130,0})));
   PressureDrop res1(
     final dp_nominal=if not (configuration == MeshedReservoir.Configuration.lowPressure)
       then dp_nominal-4*dpJun_nominal else 0)
     "Flow resistance"
-    annotation (Placement(transformation(extent={{100,-70},{80,-50}})));
+    annotation(Placement(transformation(extent={{100,-70},{80,-50}})));
 
   PressureDrop res2(
     final dp_nominal=if (configuration == MeshedReservoir.Configuration.lowPressure)
       then dp_nominal-4*dpJun_nominal else 0)
     "Flow resistance"
-    annotation (Placement(transformation(extent={{-60,-70},{-80,-50}})));
+    annotation(Placement(transformation(extent={{-60,-70},{-80,-50}})));
 
   Buildings.Controls.OBC.CDL.Reals.Sources.TimeTable yPum(
     table=pumSch,
     smoothness=Buildings.Controls.OBC.CDL.Types.Smoothness.LinearSegments,
     extrapolation=Buildings.Controls.OBC.CDL.Types.Extrapolation.Periodic)
     "Time schedule for pump operation"
-    annotation (Placement(transformation(extent={{-100,70},{-80,90}})));
+    annotation(Placement(transformation(extent={{-100,70},{-80,90}})));
 
   Modelica.Blocks.Interfaces.RealOutput pExp "Air pressure in vessel"
-    annotation (Placement(transformation(extent={{180,-50},{200,-30}})));
-  Modelica.Thermal.HeatTransfer.Sources.PrescribedHeatFlow
-                                                      heaSou if addHeat
+    annotation(Placement(transformation(extent={{180,-50},{200,-30}})));
+  Modelica.Thermal.HeatTransfer.Sources.PrescribedHeatFlow heaSou if addHeat
     "Heat source"
-    annotation (Placement(transformation(extent={{60,4},{80,24}})));
+    annotation(Placement(transformation(extent={{60,4},{80,24}})));
 
   Buildings.Controls.OBC.CDL.Reals.Sources.TimeTable yHea(
     table=[0,0; 54,1; 57,0],
     smoothness=Buildings.Controls.OBC.CDL.Types.Smoothness.ConstantSegments,
-    timeScale=3600)
-    if addHeat
+    timeScale=3600) if addHeat
     "Time schedule for heat input"
-    annotation (Placement(transformation(extent={{0,4},{20,24}})));
+    annotation(Placement(transformation(extent={{0,4},{20,24}})));
   Buildings.Controls.OBC.CDL.Reals.MultiplyByParameter gai(k=Q_flow) if addHeat
     "Gain for heat flow rate"
-    annotation (Placement(transformation(extent={{28,4},{48,24}})));
+    annotation(Placement(transformation(extent={{28,4},{48,24}})));
   Buildings.Controls.OBC.CDL.Reals.Max max1
-    annotation (Placement(transformation(extent={{120,120},{140,140}})));
+    annotation(Placement(transformation(extent={{120,120},{140,140}})));
   Buildings.Controls.OBC.CDL.Reals.Min min1
-    annotation (Placement(transformation(extent={{120,150},{140,170}})));
+    annotation(Placement(transformation(extent={{120,150},{140,170}})));
   Modelica.Blocks.Interfaces.IntegerInput ySetWasHea
-    "If 1, add heat to the loop, if -1, remove heat from the loop" annotation (
-      Placement(transformation(extent={{-220,-80},{-180,-40}}),
-        iconTransformation(extent={{-220,-80},{-180,-40}})));
+    "If 1, add heat to the loop, if -1, remove heat from the loop"
+    annotation(Placement(transformation(extent={{-220,-80},{-180,-40}}),
+      iconTransformation(extent={{-220,-80},{-180,-40}})));
   Modelica.Thermal.HeatTransfer.Sources.PrescribedHeatFlow wasHeaSou
     "Waste heat source"
-    annotation (Placement(transformation(extent={{62,-30},{82,-10}})));
+    annotation(Placement(transformation(extent={{62,-30},{82,-10}})));
   Buildings.Controls.OBC.CDL.Reals.MultiplyByParameter gaiWasHea(k=
         QWasHea_nominal) "Gain for waste heat flow rate"
-    annotation (Placement(transformation(extent={{30,-30},{50,-10}})));
+    annotation(Placement(transformation(extent={{30,-30},{50,-10}})));
 
   Buildings.Controls.OBC.CDL.Conversions.IntegerToReal intToRea
     "Type conversion to activate waste heat"
@@ -298,8 +296,8 @@ equation
     annotation (Line(points={{28,-20},{22,-20}}, color={0,0,127}));
   connect(ySetWasHea, intToRea.u) annotation (Line(points={{-200,-60},{-140,-60},
           {-140,-20},{-2,-20}}, color={255,127,0}));
-    annotation (
-    Icon(coordinateSystem(preserveAspectRatio=false, extent={{-180,-100}, {180,120}}),
+    annotation(
+    Icon(coordinateSystem(preserveAspectRatio=false, extent={{-180,-100},{180,120}}),
       graphics={
         Rectangle(
           extent={{-180,120},{180,-100}},
