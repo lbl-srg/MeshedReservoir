@@ -231,6 +231,9 @@ def postprocess():
     import matplotlib.pyplot as plt
     import numpy as np
 
+    # Use matplotlib's standard fonts (no LaTeX rendering to avoid dependencies)
+    # This provides clean, professional-looking plots without LaTeX requirements
+
     print(f"\n{'='*60}")
     print(f"POST-PROCESSING")
     print(f"{'='*60}\n")
@@ -336,7 +339,7 @@ def postprocess():
 
     # Plot 1: 3x2 grid with all 6 cases (first 6 only)
     print("  Creating 3x2 grid plot...")
-    fig1, axes = plt.subplots(3, 1, figsize=(7, 10))
+    fig1, axes = plt.subplots(3, 1, figsize=(7, 11))
     axes = axes.flatten()
 
     for i in range(3):
@@ -366,6 +369,11 @@ def postprocess():
         y2_norm = data['yPum_y2'] / m_flow_nominal
         y3_norm = data['yPum_y3'] / m_flow_nominal
 
+        # Validate that y1_norm and y3_norm are equal (within tolerance)
+        max_diff = np.max(np.abs(y1_norm - y3_norm))
+        if max_diff > 0.01:
+            raise ValueError(f"y1_norm and y3_norm differ by {max_diff:.4f}, exceeding tolerance of 0.01")
+
         # Plot pressure range polygon in background (light grey)
         ax.fill_between(time_hours_shifted, pSysMin_bar[mask], pSysMax_bar[mask],
                         color='lightgreen', alpha=0.3, zorder=0)
@@ -378,16 +386,52 @@ def postprocess():
         # Create secondary y-axis for normalized flow rates
         ax2 = ax.twinx()
 
-        # Plot normalized flow rates on secondary y-axis (faint gray, 1pt)
-        ax2.plot(time_hours_shifted, y1_norm[mask], color='lightgray', linewidth=1)
-        ax2.plot(time_hours_shifted, y2_norm[mask], color='lightgray', linewidth=1)
-        ax2.plot(time_hours_shifted, y3_norm[mask], color='lightgray', linewidth=1)
+        # Plot normalized flow rates on secondary y-axis
+        ax2.plot(time_hours_shifted, y1_norm[mask], color='lightgray', linewidth=1.2, label=r'$\dot m_1/\dot m_{1,0} = \dot m_3/\dot m_{3,0}$')
+        ax2.plot(time_hours_shifted, y2_norm[mask], color='gray', linewidth=1.5, linestyle='--', label=r'$\dot m_2/\dot m_{2,0}$')
+
+        # Add labels for normalized flow rates at specific times
+        # Label for y1_norm at t=3.0h
+        t_y1_label = 3.0
+        idx_y1 = min(range(len(time_hours_shifted)),
+                     key=lambda j: abs(time_hours_shifted[j] - t_y1_label))
+        ax2.text(t_y1_label, y1_norm[mask][idx_y1], r'$\frac{\dot m_1}{\dot m_{0,1}} = \frac{\dot m_3}{\dot m_{0,3}}$',
+                fontsize=11, ha='center', va='bottom')
+
+        # Label for y2_norm at t=2.1h
+        t_y2_label = 2.1
+        idx_y2 = min(range(len(time_hours_shifted)),
+                     key=lambda j: abs(time_hours_shifted[j] - t_y2_label))
+        ax2.text(t_y2_label, y2_norm[mask][idx_y2], r'$\frac{\dot m_2}{\dot m_{0,2}}$',
+                fontsize=11, ha='left', va='bottom')
 
         # Set consistent y-axis range for pressure (primary axis)
         ax.set_ylim([0, pMax_bar])
 
         # Set secondary y-axis range for normalized flow rates
         ax2.set_ylim([0, 1.2])
+
+        # Add loop labels for first and third subfigures (i=0 and i=2), similar to fig3
+        if i in [0, 2]:
+            # Position labels at t=55.0h absolute → 1.0h shifted
+            t_lab = 55.0 - time_start
+            idx_lab = min(range(len(time_hours_shifted)),
+                         key=lambda j: abs(time_hours_shifted[j] - t_lab))
+            ax.text(t_lab, p1_bar[mask][idx_lab], 'Loop 1', fontsize=11,
+                   ha='left', va='bottom')
+            ax.text(t_lab, p2_bar[mask][idx_lab], 'Loop 2', fontsize=11,
+                   ha='left', va='bottom')
+            ax.text(t_lab, p3_bar[mask][idx_lab], 'Loop 3', fontsize=11,
+                   ha='left', va='bottom')
+
+        # Add combined loop label for middle subfigure (i=1)
+        if i == 1:
+            # Position label at t=55.0h absolute → 1.0h shifted
+            t_lab = 55.0 - time_start
+            idx_lab = min(range(len(time_hours_shifted)),
+                         key=lambda j: abs(time_hours_shifted[j] - t_lab))
+            ax.text(t_lab, p1_bar[mask][idx_lab], 'Loop 1, 2, 3', fontsize=11,
+                   ha='left', va='bottom')
 
         # Add labels at t=6000s relative to window start (1.67 hours from start of 54h window)
         if 'ideal' not in data['label'].lower():
@@ -543,18 +587,21 @@ def postprocess():
     ax3a = axes3[0]
     loo1_wasHea = last_data['loo1.ySetWasHea'][mask]
     loo2_wasHea = last_data['loo2.ySetWasHea'][mask]
-    ax3a.plot(time_hours_shifted, loo1_wasHea, 'k', linewidth=1.5)
+    ax3a.plot(time_hours_shifted, loo1_wasHea/2, 'k', linewidth=1.5)
     ax3a.plot(time_hours_shifted, loo2_wasHea, 'k', linewidth=1.5)
 
     # Labels as text above the data line at t=55.5 h absolute → 1.5 h shifted
-    t_lab1 = 55.5 - time_start
+    t_lab1 = 55.25 - time_start
+    t_lab2 = 54.25 - time_start
     idx_lab1 = min(range(len(time_hours_shifted)),
                    key=lambda j: abs(time_hours_shifted[j] - t_lab1))
-    ax3a.text(t_lab1, loo1_wasHea[idx_lab1],
-              'Waste heat into loop 1 and 2', fontsize=11,
+    idx_lab2 = min(range(len(time_hours_shifted)),
+                   key=lambda j: abs(time_hours_shifted[j] - t_lab2))
+    ax3a.text(t_lab1, loo1_wasHea[idx_lab1]/2,
+              'Prosumer heat imbalance of loop 1 and 2', fontsize=11,
               ha='left', va='bottom')
-    ax3a.text(t_lab1, loo2_wasHea[idx_lab1],
-              'Waste heat out of loop 2', fontsize=11,
+    ax3a.text(t_lab2, loo2_wasHea[idx_lab2],
+              'Prosumer heat imbalance of loop 2', fontsize=11,
               ha='left', va='bottom')
 
     ax3a.set_ylabel('Waste heat control signal [1]', fontsize=12)
