@@ -298,12 +298,20 @@ def postprocess():
             data['loo1.ySetWasHea'] = np.interp(common_time, t, v)
             t, v = r.values("loo2.ySetWasHea")
             data['loo2.ySetWasHea'] = np.interp(common_time, t, v)
-            t, v = r.values("loo1.vol.T")
-            data['loo1.vol.T'] = np.interp(common_time, t, v)
-            t, v = r.values("loo2.vol.T")
-            data['loo2.vol.T'] = np.interp(common_time, t, v)
-            t, v = r.values("loo3.vol.T")
-            data['loo3.vol.T'] = np.interp(common_time, t, v)
+
+            t, v = r.values("loo1.vol1.T")
+            data['loo1.vol1.T'] = np.interp(common_time, t, v)
+            t, v = r.values("loo2.vol1.T")
+            data['loo2.vol1.T'] = np.interp(common_time, t, v)
+            t, v = r.values("loo3.vol1.T")
+            data['loo3.vol1.T'] = np.interp(common_time, t, v)
+
+            t, v = r.values("loo1.vol2.T")
+            data['loo1.vol2.T'] = np.interp(common_time, t, v)
+            t, v = r.values("loo2.vol2.T")
+            data['loo2.vol2.T'] = np.interp(common_time, t, v)
+            t, v = r.values("loo3.vol2.T")
+            data['loo3.vol2.T'] = np.interp(common_time, t, v)
         except Exception:
             pass
 
@@ -615,22 +623,29 @@ def postprocess():
     # ── Subplot 2: loop temperatures ───────────────────────────────────────
     ax3b = axes3[1]
     # Convert K → °C
-    T1_C = last_data['loo1.vol.T'][mask] - 273.15
-    T2_C = last_data['loo2.vol.T'][mask] - 273.15
-    T3_C = last_data['loo3.vol.T'][mask] - 273.15
-    ax3b.plot(time_hours_shifted, T1_C, 'k', linewidth=1.5)
-    ax3b.plot(time_hours_shifted, T2_C, 'k', linewidth=1.5)
-    ax3b.plot(time_hours_shifted, T3_C, 'k', linewidth=1.5)
+    T11_C = last_data['loo1.vol1.T'][mask] - 273.15
+    T21_C = last_data['loo2.vol1.T'][mask] - 273.15
+    T31_C = last_data['loo3.vol1.T'][mask] - 273.15
+
+    T12_C = last_data['loo1.vol2.T'][mask] - 273.15
+    T22_C = last_data['loo2.vol2.T'][mask] - 273.15
+    T32_C = last_data['loo3.vol2.T'][mask] - 273.15
+    ax3b.plot(time_hours_shifted, T11_C, 'k.', linewidth=1.5)
+    ax3b.plot(time_hours_shifted, T21_C, 'k.', linewidth=1.5)
+    ax3b.plot(time_hours_shifted, T31_C, 'k.', linewidth=1.5)
+    ax3b.plot(time_hours_shifted, T12_C, 'r', linewidth=1.5)
+    ax3b.plot(time_hours_shifted, T22_C, 'r', linewidth=1.5)
+    ax3b.plot(time_hours_shifted, T32_C, 'r', linewidth=1.5)
 
     # Labels as text above the data line at t=56.5 h absolute → 2.5 h shifted
     t_lab2 = 56.5 - time_start
     idx_lab2 = min(range(len(time_hours_shifted)),
                    key=lambda j: abs(time_hours_shifted[j] - t_lab2))
-    ax3b.text(t_lab2, T1_C[idx_lab2], 'Loop 1', fontsize=11,
+    ax3b.text(t_lab2, T11_C[idx_lab2], 'Loop 1', fontsize=11,
               ha='left', va='bottom')
-    ax3b.text(t_lab2, T2_C[idx_lab2], 'Loop 2', fontsize=11,
+    ax3b.text(t_lab2, T21_C[idx_lab2], 'Loop 2', fontsize=11,
               ha='left', va='bottom')
-    ax3b.text(t_lab2, T3_C[idx_lab2], 'Loop 3', fontsize=11,
+    ax3b.text(t_lab2, T31_C[idx_lab2], 'Loop 3', fontsize=11,
               ha='left', va='bottom')
 
     ax3b.set_ylabel(r'Loop temperatures [$^\circ \mathrm{C}$]', fontsize=12)

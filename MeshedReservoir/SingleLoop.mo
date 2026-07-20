@@ -63,8 +63,8 @@ model SingleLoop "Single loop with expansion vessel"
 
   parameter Boolean addHeat = false
     "Set to true to add heat";
-  parameter Modelica.Units.SI.HeatFlowRate Q_flow = vol.V * rho10 * 4200 * (30-10) / (3*3600)
-    "Heat flow rate to heat up volume from 20 to 30 degC in 3 hours";
+  parameter Modelica.Units.SI.HeatFlowRate Q_flow=vol1.V*rho10*4200*(30 - 10)/(
+      3*3600) "Heat flow rate to heat up volume from 20 to 30 degC in 3 hours";
 
   parameter Modelica.Units.SI.HeatFlowRate QWasHea_nominal
     "Gain for waste (or excess) heat flow rate transfer";
@@ -162,11 +162,11 @@ model SingleLoop "Single loop with expansion vessel"
     "Junction"
     annotation(Placement(transformation(extent={{-10,-70},{-30,-50}})));
 
-  Volume vol(nPorts=2)
-    "Fluid volume"
-    annotation(Placement(transformation(extent={{-10,10},{10,-10}},
-      rotation=270,
-      origin={130,0})));
+  Volume vol1(V=(VLoo + VBor)/2, nPorts=2) "Fluid volume" annotation (Placement(
+        transformation(
+        extent={{-10,10},{10,-10}},
+        rotation=270,
+        origin={130,0})));
   PressureDrop res1(
     final dp_nominal=if not (configuration == MeshedReservoir.Configuration.lowPressure)
       then dp_nominal-4*dpJun_nominal else 0)
@@ -188,9 +188,9 @@ model SingleLoop "Single loop with expansion vessel"
 
   Modelica.Blocks.Interfaces.RealOutput pExp "Air pressure in vessel"
     annotation(Placement(transformation(extent={{180,-50},{200,-30}})));
-  Modelica.Thermal.HeatTransfer.Sources.PrescribedHeatFlow heaSou if addHeat
+  Modelica.Thermal.HeatTransfer.Sources.PrescribedHeatFlow heaSou1 if addHeat
     "Heat source"
-    annotation(Placement(transformation(extent={{60,4},{80,24}})));
+    annotation (Placement(transformation(extent={{70,4},{90,24}})));
 
   Buildings.Controls.OBC.CDL.Reals.Sources.TimeTable yHea(
     table=[0,0; 54,1; 57,0],
@@ -198,9 +198,10 @@ model SingleLoop "Single loop with expansion vessel"
     timeScale=3600) if addHeat
     "Time schedule for heat input"
     annotation(Placement(transformation(extent={{0,4},{20,24}})));
-  Buildings.Controls.OBC.CDL.Reals.MultiplyByParameter gai(k=Q_flow) if addHeat
+  Buildings.Controls.OBC.CDL.Reals.MultiplyByParameter gai(k=Q_flow/2)
+                                                                     if addHeat
     "Gain for heat flow rate"
-    annotation(Placement(transformation(extent={{28,4},{48,24}})));
+    annotation(Placement(transformation(extent={{34,4},{54,24}})));
   Buildings.Controls.OBC.CDL.Reals.Max max1
     annotation(Placement(transformation(extent={{120,120},{140,140}})));
   Buildings.Controls.OBC.CDL.Reals.Min min1
@@ -209,16 +210,34 @@ model SingleLoop "Single loop with expansion vessel"
     "If 1, add heat to the loop, if -1, remove heat from the loop"
     annotation(Placement(transformation(extent={{-220,-80},{-180,-40}}),
       iconTransformation(extent={{-220,-80},{-180,-40}})));
-  Modelica.Thermal.HeatTransfer.Sources.PrescribedHeatFlow wasHeaSou
+  Modelica.Thermal.HeatTransfer.Sources.PrescribedHeatFlow wasHeaSou1
     "Waste heat source"
-    annotation(Placement(transformation(extent={{62,-30},{82,-10}})));
+    annotation (Placement(transformation(extent={{70,-10},{90,10}})));
   Buildings.Controls.OBC.CDL.Reals.MultiplyByParameter gaiWasHea(k=
-        QWasHea_nominal) "Gain for waste heat flow rate"
+        QWasHea_nominal/2)
+                         "Gain for waste heat flow rate"
     annotation(Placement(transformation(extent={{30,-30},{50,-10}})));
 
   Buildings.Controls.OBC.CDL.Conversions.IntegerToReal intToRea
     "Type conversion to activate waste heat"
     annotation(Placement(transformation(extent={{0,-30},{20,-10}})));
+  Buildings.Fluid.MixingVolumes.MixingVolume
+         vol2(
+    nPorts=2,
+    redeclare package Medium = Medium,
+    energyDynamics=Modelica.Fluid.Types.Dynamics.FixedInitial,
+    mSenFac=1,
+    m_flow_nominal=m_flow_nominal,
+    V=(VLoo + VBor)/2) "Fluid volume"
+    annotation(Placement(transformation(extent={{-10,10},{10,-10}},
+      rotation=90,
+      origin={-110,0})));
+  Modelica.Thermal.HeatTransfer.Sources.PrescribedHeatFlow heaSou2 if addHeat
+    "Heat source"
+    annotation(Placement(transformation(extent={{78,-32},{98,-12}})));
+  Modelica.Thermal.HeatTransfer.Sources.PrescribedHeatFlow wasHeaSou2
+    "Waste heat source"
+    annotation(Placement(transformation(extent={{78,-50},{98,-30}})));
 equation
   connect(jun11.port_2, jun12.port_1)
     annotation (Line(points={{-10,40},{10,40}}, color={0,127,255}));
@@ -260,22 +279,20 @@ equation
           {190,-40}}, color={0,0,127}));
   connect(pExp, expUp.p) annotation (Line(points={{190,-40},{160,-40},{160,108},
           {-106,108},{-106,74},{-109,74}}, color={0,0,127}));
-  connect(heaSou.port, vol.heatPort) annotation (Line(points={{80,14},{130,14},{
-          130,10}},  color={191,0,0}));
+  connect(heaSou1.port, vol1.heatPort)
+    annotation (Line(points={{90,14},{130,14},{130,10}}, color={191,0,0}));
   connect(jun14.port_2, res2.port_a)
     annotation (Line(points={{-30,-60},{-60,-60}}, color={0,127,255}));
-  connect(res2.port_b, pumUp.port_a) annotation (Line(points={{-80,-60},{-120,-60},
-          {-120,40},{-60,40}}, color={0,127,255}));
-  connect(pumDow.port_b, vol.ports[1])
+  connect(pumDow.port_b, vol1.ports[1])
     annotation (Line(points={{120,40},{140,40},{140,1}}, color={0,127,255}));
-  connect(res1.port_a, vol.ports[2]) annotation (Line(points={{100,-60},{140,-60},
+  connect(res1.port_a, vol1.ports[2]) annotation (Line(points={{100,-60},{140,-60},
           {140,-1}}, color={0,127,255}));
   connect(res1.port_b, jun13.port_1)
     annotation (Line(points={{80,-60},{30,-60}}, color={0,127,255}));
-  connect(heaSou.Q_flow, gai.y)
-    annotation (Line(points={{60,14},{50,14}}, color={0,0,127}));
+  connect(heaSou1.Q_flow, gai.y)
+    annotation (Line(points={{70,14},{56,14}}, color={0,0,127}));
   connect(yHea.y[1], gai.u)
-    annotation (Line(points={{22,14},{26,14}}, color={0,0,127}));
+    annotation (Line(points={{22,14},{32,14}}, color={0,0,127}));
   connect(min1.y, pIn) annotation (Line(points={{142,160},{174,160},{174,110},{
           190,110}}, color={0,0,127}));
   connect(max1.y, pOut) annotation (Line(points={{142,130},{172,130},{172,90},{
@@ -288,14 +305,26 @@ equation
           136},{118,136}}, color={0,0,127}));
   connect(pumDow.pOut, max1.u2) annotation (Line(points={{121,46},{128,46},{128,
           60},{104,60},{104,124},{118,124}}, color={0,0,127}));
-  connect(gaiWasHea.y, wasHeaSou.Q_flow)
-    annotation (Line(points={{52,-20},{62,-20}}, color={0,0,127}));
-  connect(wasHeaSou.port, vol.heatPort) annotation (Line(points={{82,-20},{100,-20},
-          {100,14},{130,14},{130,10}}, color={191,0,0}));
+  connect(gaiWasHea.y, wasHeaSou1.Q_flow) annotation (Line(points={{52,-20},{58,
+          -20},{58,0},{70,0}}, color={0,0,127}));
+  connect(wasHeaSou1.port, vol1.heatPort) annotation (Line(points={{90,0},{100,
+          0},{100,14},{130,14},{130,10}}, color={191,0,0}));
   connect(gaiWasHea.u, intToRea.y)
     annotation (Line(points={{28,-20},{22,-20}}, color={0,0,127}));
   connect(ySetWasHea, intToRea.u) annotation (Line(points={{-200,-60},{-140,-60},
           {-140,-20},{-2,-20}}, color={255,127,0}));
+  connect(res2.port_b, vol2.ports[1]) annotation (Line(points={{-80,-60},{-120,
+          -60},{-120,-1}}, color={0,127,255}));
+  connect(vol2.ports[2], pumUp.port_a)
+    annotation (Line(points={{-120,1},{-120,40},{-60,40}}, color={0,127,255}));
+  connect(gai.y, heaSou2.Q_flow) annotation (Line(points={{56,14},{62,14},{62,
+          -22},{78,-22}}, color={0,0,127}));
+  connect(gaiWasHea.y, wasHeaSou2.Q_flow) annotation (Line(points={{52,-20},{58,
+          -20},{58,-40},{78,-40}}, color={0,0,127}));
+  connect(heaSou2.port, vol2.heatPort) annotation (Line(points={{98,-22},{112,
+          -22},{112,-46},{-110,-46},{-110,-10}}, color={191,0,0}));
+  connect(wasHeaSou2.port, vol2.heatPort) annotation (Line(points={{98,-40},{
+          106,-40},{106,-46},{-110,-46},{-110,-10}}, color={191,0,0}));
     annotation(
     Icon(coordinateSystem(preserveAspectRatio=false, extent={{-180,-100},{180,120}}),
       graphics={
