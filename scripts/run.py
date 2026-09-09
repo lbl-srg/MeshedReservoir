@@ -422,14 +422,14 @@ def postprocess():
         # Add loop labels for first and third subfigures (i=0 and i=2), similar to fig3
         if i in [0, 2]:
             # Position labels at t=56.5h absolute → 2.5h shifted (same as fig3)
-            t_lab = 56.5 - time_start
+            t_lab = 55.0 - time_start
             idx_lab = min(range(len(time_hours_shifted)),
                          key=lambda j: abs(time_hours_shifted[j] - t_lab))
-            ax.text(t_lab, p1_bar[mask][idx_lab], 'Loop 1', fontsize=11,
+            ax.text(t_lab, p1_bar[mask][idx_lab]+0.2, 'Loop 1', fontsize=11,
                    ha='left', va='bottom')
-            ax.text(t_lab, p2_bar[mask][idx_lab], 'Loop 2', fontsize=11,
+            ax.text(t_lab, p2_bar[mask][idx_lab]+0.2, 'Loop 2', fontsize=11,
                    ha='left', va='bottom')
-            ax.text(t_lab, p3_bar[mask][idx_lab], 'Loop 3', fontsize=11,
+            ax.text(t_lab, p3_bar[mask][idx_lab]+0.2, 'Loop 3', fontsize=11,
                    ha='left', va='bottom')
 
         # Add combined loop label for middle subfigure (i=1)
@@ -606,7 +606,7 @@ def postprocess():
     idx_lab2 = min(range(len(time_hours_shifted)),
                    key=lambda j: abs(time_hours_shifted[j] - t_lab2))
     ax3a.text(t_lab1, loo1_wasHea[idx_lab1]/2,
-              'Prosumer heat imbalance of loop 1 and 2', fontsize=11,
+              'Prosumer heat imbalance of loop 1 and 3', fontsize=11,
               ha='left', va='bottom')
     ax3a.text(t_lab2, loo2_wasHea[idx_lab2],
               'Prosumer heat imbalance of loop 2', fontsize=11,
